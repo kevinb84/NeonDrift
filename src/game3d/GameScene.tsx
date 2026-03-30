@@ -21,6 +21,7 @@ import { useGhostRecorder } from './hooks/useGhostRecorder';
 import { useGhostPlayback } from './hooks/useGhostPlayback';
 import type { GhostState } from './hooks/useGhostPlayback';
 import type { ReplayData } from './hooks/useGhostRecorder';
+import { useGameAudio } from './hooks/useGameAudio';
 import { useSettings } from './menu/SettingsMenu';
 import { createSeededRandom } from '../lib/random';
 import type { CarConfig, Difficulty, TrackConfig } from './menu/useGameFlow';
@@ -299,6 +300,7 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
     const raceState = useRaceState();
     const collision = useCollision();
     const sound = useSound();
+    const gameAudio = useGameAudio();
     const [engineStarted, setEngineStarted] = useState(false);
 
     // Multiplayer sync — only active in ranked mode
@@ -329,6 +331,7 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
         const handler = () => {
             if (!engineStarted) {
                 sound.startEngine();
+                gameAudio.initAudio();
                 setEngineStarted(true);
             }
         };
@@ -411,7 +414,10 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
         // Only allow movement during racing
         if (rs.phase !== 'racing') {
             speedRef.current = 0;
+            gameAudio.updateAudio(0, false);
             return;
+        } else {
+            gameAudio.updateAudio(speedRef.current, true);
         }
 
         // Start ghost recording on first racing frame
