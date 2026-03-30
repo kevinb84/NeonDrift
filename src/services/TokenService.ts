@@ -119,8 +119,8 @@ export class TokenService {
             if (!json.success) throw new Error(json.error);
             return json.response as BagsToken[];
         } catch (e) {
-            console.warn('[TokenService] Feed fetch failed, using mocks:', e);
-            return MOCK_TOKENS;
+            console.warn('[TokenService] Feed fetch failed:', e);
+            return []; 
         }
     }
 
@@ -149,8 +149,8 @@ export class TokenService {
             if (!json.success) throw new Error(json.error);
             return json.response as TokenPrice;
         } catch (e) {
-            console.warn('[TokenService] Price fetch failed, using mock:', e);
-            return getMockPrice(tokenMint);
+            console.warn('[TokenService] Price fetch failed:', e);
+            throw e; 
         }
     }
 }
