@@ -76,5 +76,5 @@ This project deeply integrates with the Bags.fm API to handle all ecosystem toke
 
 ---
 <div align="center">
-   <i>Powered by Solana. Designed by kevinb84. Prepared for the Bags.fm Hackathon.</i>
+   <i>Powered by Solana. Designed by kevinb84.</i>
 </div>
