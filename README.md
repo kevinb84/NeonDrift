@@ -31,8 +31,8 @@ Players can stake their tokens via Bags.fm bonding curves, race against real-tim
 ## 🚀 The Bags.fm Integration (Hackathon Core)
 This project deeply integrates with the Bags.fm API to handle all ecosystem tokenomics natively within our `Dashboard`:
 
-1. **Token Deployer Engine (`CreateToken.tsx`)**
-   Users can architect and formally launch their ecosystem tokens to the Solana Mainnet directly through the dashboard. This securely signs via Phantom and pings the Bags API to construct the bonding curve. 
+1. **Ecosystem Deployer Engine (`CreateToken.tsx`)**
+   Game administrators can formally launch the `$NDRIFT` ecosystem token to the Solana Mainnet directly through a protected dashboard route. This securely signs via Phantom and pings the Bags API to dynamically construct the core bonding curve that powers the game. 
 2. **In-game DEX (`SwapPanel.tsx`)**
    Powered by the Bags API `quote` and `/trade` endpoints, players can visually trade `$NDRIFT` alongside any Solana token straight from the frontend—bypassing the need to use an external exchange.
 3. **Token Discovery (`TokenExplorer.tsx`)**
