@@ -456,7 +456,7 @@ export function RankedLobby({ onMatchReady, onBack }: Props) {
                     RANKED <span style={{ color: '#ff00ff' }}>LOBBY</span>
                 </h2>
                 <p style={{ color: '#555', fontSize: 12, letterSpacing: 3, marginTop: 8 }}>
-                    REAL-TIME MATCHMAKING • SOLANA DEVNET
+                    REAL-TIME MATCHMAKING • SOLANA MAINNET
                 </p>
             </div>
 
