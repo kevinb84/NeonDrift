@@ -1,0 +1,15 @@
+src/components/CreateToken.tsx(2,8): error TS6133: 'React' is declared but its value is never read.
+src/components/Dashboard.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/components/Dashboard.tsx(11,25): error TS6133: 'error' is declared but its value is never read.
+src/components/Dashboard.tsx(11,32): error TS6133: 'isLoading' is declared but its value is never read.
+src/components/Dashboard.tsx(16,11): error TS6133: 'supply' is declared but its value is never read.
+src/components/Profile.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/components/ui/Button.tsx(34,14): error TS2322: Type '{ children: (ReactNode | Element)[]; form?: string | undefined; formAction?: string | undefined; formEncType?: string | undefined; formMethod?: string | undefined; ... 271 more ...; disabled: boolean | undefined; }' is not assignable to type 'Omit<HTMLMotionProps<"button">, "ref">'.
+  Types of property 'onDrag' are incompatible.
+    Type 'DragEventHandler<HTMLButtonElement> | undefined' is not assignable to type '((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void) | undefined'.
+      Type 'DragEventHandler<HTMLButtonElement>' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+        Types of parameters 'event' and 'event' are incompatible.
+          Type 'MouseEvent | TouchEvent | PointerEvent' is not assignable to type 'DragEvent<HTMLButtonElement>'.
+            Type 'MouseEvent' is missing the following properties from type 'DragEvent<HTMLButtonElement>': dataTransfer, nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+src/components/ui/ProgressBar.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/components/wallet/WalletButton.tsx(2,8): error TS6133: 'React' is declared but its value is never read.

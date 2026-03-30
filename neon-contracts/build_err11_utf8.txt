@@ -1,0 +1,39 @@
+﻿anchor : 
+[2026-03-02T23:13:12.651428700Z ERROR 
+cargo_build_sbf] Failed to obtain 
+package metadata: `cargo metadata` 
+exited with an error:  Downloading 
+crates ...
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build > build_err11.txt 2>&1
++                             
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: ([2026-03-02T23:...ding crat  
+  es ...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+      Downloaded wit-bindgen v0.51.0
+    error: failed to parse manifest at 
+`C:\Users\Aji4r\.cargo\registry\src\ind
+ex.crates.io-6f17d22bba15001f\wit-bindg
+en-0.51.0\Cargo.toml`
+    
+    Caused by:
+      feature `edition2024` is required
+    
+      The package requires the Cargo 
+feature called `edition2024`, but that 
+feature is not stabilized in this 
+version of Cargo (1.79.0 (ffa9cf99a 
+2024-06-03)).
+      Consider trying a newer version 
+of Cargo (this may require the nightly 
+release).
+      See https://doc.rust-lang.org/nig
+htly/cargo/reference/unstable.html#edit
+ion-2024 for more information about 
+the status of this feature.
+    

@@ -1,0 +1,24 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+error: failed to parse lock file at: \\
+?\C:\Users\Aji4r\OneDrive\Desktop\NeonP
+roject\neon-contracts\Cargo.lock
+
+Caused by:
+  lock file version `4` was found, but 
+this version of Cargo does not 
+understand this lock file, perhaps 
+Cargo needs to be updated?

@@ -1,0 +1,128 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+   Compiling quote v1.0.45
+   Compiling getrandom v0.3.4
+   Compiling generic-array v0.14.9
+   Compiling serde v1.0.215
+   Compiling once_cell v1.21.3
+   Compiling subtle v2.6.1
+   Compiling syn v2.0.117
+   Compiling syn v1.0.109
+   Compiling jobserver v0.1.34
+   Compiling cc v1.2.56
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.6
+   Compiling digest v0.10.7
+   Compiling ahash v0.8.4
+   Compiling solana-frozen-abi-macro 
+v1.16.27
+   Compiling zerocopy v0.7.35
+   Compiling ahash v0.7.8
+   Compiling num-traits v0.2.19
+   Compiling memoffset v0.9.1
+   Compiling solana-frozen-abi v1.16.27
+   Compiling serde_json v1.0.143
+   Compiling itoa v1.0.17
+   Compiling ryu v1.0.23
+   Compiling memchr v2.8.0
+   Compiling hashbrown v0.13.2
+   Compiling hashbrown v0.11.2
+   Compiling sha2 v0.10.9
+   Compiling log v0.4.29
+   Compiling proc-macro2-diagnostics 
+v0.9.1
+   Compiling borsh-derive-internal 
+v0.10.4
+   Compiling 
+borsh-schema-derive-internal v0.10.4
+   Compiling 
+borsh-schema-derive-internal v0.9.3
+   Compiling borsh-derive-internal 
+v0.9.3
+   Compiling itertools v0.10.5
+   Compiling sha3 v0.10.8
+   Compiling getrandom v0.2.17
+   Compiling base64 v0.13.1
+   Compiling blake3 v1.5.5
+   Compiling solana-program v1.16.27
+   Compiling num-derive v0.3.3
+   Compiling serde_derive v1.0.215
+   Compiling thiserror-impl v1.0.69
+   Compiling bytemuck_derive v1.10.2
+   Compiling solana-sdk-macro v1.16.27
+   Compiling thiserror v1.0.69
+   Compiling bytemuck v1.25.0
+   Compiling serde_bytes v0.11.17
+   Compiling bv v0.11.1
+   Compiling bincode v1.3.3
+   Compiling toml v0.5.11
+   Compiling anchor-syn v0.26.0
+   Compiling proc-macro-crate v0.1.5
+   Compiling borsh-derive v0.10.4
+   Compiling borsh-derive v0.9.3
+   Compiling borsh v0.9.3
+   Compiling borsh v0.10.4
+Error: Function _ZN112_$LT$solana_progr
+am..instruction..InstructionError$u20$a
+s$u20$solana_frozen_abi..abi_example..A
+biEnumVisitor$GT$13visit_for_abi17h700d
+e28ae4d7f323E Stack offset of 4608 
+exceeded max offset of 4096 by 512 
+bytes, please minimize large stack 
+variables
+   Compiling anchor-derive-accounts 
+v0.26.0
+   Compiling anchor-attribute-event 
+v0.26.0
+   Compiling 
+anchor-attribute-interface v0.26.0
+   Compiling anchor-attribute-state 
+v0.26.0
+   Compiling anchor-attribute-account 
+v0.26.0
+   Compiling anchor-attribute-constant 
+v0.26.0
+   Compiling anchor-attribute-program 
+v0.26.0
+   Compiling 
+anchor-attribute-access-control v0.26.0
+   Compiling anchor-attribute-error 
+v0.26.0
+   Compiling anchor-lang v0.26.0
+   Compiling neon-contracts v0.1.0 (C:\
+Users\Aji4r\OneDrive\Desktop\NeonProjec
+t\neon-contracts\programs\neon-contract
+s)
+warning: unused variable: `signer`
+   --> programs\neon-contracts\src\lib.
+rs:117:13
+    |
+117 |         let signer = 
+&[&seeds[..]];
+    |             ^^^^^^ help: if this 
+is intentional, prefix it with an 
+underscore: `_signer`
+    |
+    = note: 
+`#[warn(unused_variables)]` on by 
+default
+
+warning: `neon-contracts` (lib) 
+generated 1 warning (run `cargo fix 
+--lib -p neon-contracts` to apply 1 
+suggestion)
+    Finished release [optimized] 
+target(s) in 2m 48s

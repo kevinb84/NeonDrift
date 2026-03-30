@@ -1,0 +1,41 @@
+﻿anchor : info: 
+uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPR
+OFILE; anchor build 2> 
+build_err2.txt
++                      
+       ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (info: uninsta   
+ lling toolchain 's    
+olana':String) [],     
+RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+info: toolchain 
+'solana' uninstalled
+error: package 
+`rayon-core v1.13.0` 
+cannot be built 
+because it requires 
+rustc 1.80 or newer, 
+while the currently 
+active rustc version 
+is 1.75.0-dev
+Either upgrade to 
+rustc 1.80 or newer, 
+or use
+cargo update 
+rayon-core@1.13.0 
+--precise ver
+where `ver` is the 
+latest version of 
+`rayon-core` 
+supporting rustc 
+1.75.0-dev

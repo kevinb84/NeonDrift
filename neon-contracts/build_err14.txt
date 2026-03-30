@@ -1,0 +1,61 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+ Downloading crates ...
+  Downloaded ahash v0.8.4
+  Downloaded ark-std v0.4.0
+  Downloaded zeroize_derive v1.4.3
+  Downloaded solana-frozen-abi-macro 
+v1.16.27
+  Downloaded jobserver v0.1.34
+  Downloaded serde_derive v1.0.228
+  Downloaded getrandom v0.3.4
+  Downloaded serde v1.0.228
+  Downloaded hashbrown v0.13.2
+  Downloaded blake3 v1.5.5
+  Downloaded rand v0.8.5
+  Downloaded ark-ff v0.4.2
+  Downloaded serde_core v1.0.228
+  Downloaded serde_bytes v0.11.19
+  Downloaded borsh v0.10.4
+  Downloaded ark-poly v0.4.2
+  Downloaded solana-frozen-abi v1.16.27
+  Downloaded rustc-hash v1.1.0
+  Downloaded rand_chacha v0.3.1
+  Downloaded quote v1.0.45
+  Downloaded paste v1.0.15
+  Downloaded num-integer v0.1.46
+  Downloaded memoffset v0.9.1
+  Downloaded 
+borsh-schema-derive-internal v0.10.4
+  Downloaded borsh-derive-internal 
+v0.10.4
+  Downloaded array-bytes v1.4.1
+  Downloaded ark-serialize-derive 
+v0.4.2
+  Downloaded ark-ff-asm v0.4.2
+  Downloaded ark-bn254 v0.4.0
+  Downloaded ark-serialize v0.4.2
+  Downloaded ark-ec v0.4.2
+error: package `zmij v1.0.21` cannot 
+be built because it requires rustc 
+1.71 or newer, while the currently 
+active rustc version is 1.68.0-dev
+Either upgrade to rustc 1.71 or newer, 
+or use
+cargo update -p zmij@1.0.21 --precise 
+ver
+where `ver` is the latest version of 
+`zmij` supporting rustc 1.68.0-dev

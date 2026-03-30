@@ -1,0 +1,47 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+NotSpecifi    ed: (info: uninstalling 
+toolchain 's    olana':String) [], 
+RemoteException
+    + FullyQualifiedErrorId : 
+NativeComm    andError
+ 
+info: toolchain 'solana' uninstalled
+Error: Function _ZN112_$LT$solana_progr
+am..instruction..InstructionError$u20$a
+s$u20$solana_frozen_abi..abi_example..A
+biEnumVisitor$GT$13visit_for_abi17h700d
+e28ae4d7f323E Stack offset of 4608 
+exceeded max offset of 4096 by 512 
+bytes, please minimize large stack 
+variables
+   Compiling neon-contracts v0.1.0 (C:\
+Users\Aji4r\OneDrive\Desktop\NeonProjec
+t\neon-contracts\programs\neon-contract
+s)
+warning: unused variable: `signer`
+   --> programs\neon-contracts\src\lib.
+rs:117:13
+    |
+117 |         let signer = 
+&[&seeds[..]];
+    |             ^^^^^^ help: if this 
+is intentional, prefix it with an 
+underscore: `_signer`
+    |
+    = note: 
+`#[warn(unused_variables)]` on by 
+default
+
+warning: `neon-contracts` (lib) 
+generated 1 warning (run `cargo fix 
+--lib -p neon-contracts` to apply 1 
+suggestion)
+    Finished release [optimized] 
+target(s) in 11.72s

@@ -1,0 +1,7 @@
+﻿Deploying workspace: https://api.devnet.solana.com
+Upgrade authority: C:\Users\Aji4r\.config\solana\id.json
+Deploying program "neon-contracts"...
+Program path: C:\Users\Aji4r\OneDrive\Desktop\NeonProject\neon-contracts\target/deploy/neon_contracts.so...
+Program Id: ARcy8Hgks4bfNoYrrdCunrHbvE1dR8kiFHBCRu1Gw6Gi
+
+Deploy success

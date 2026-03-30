@@ -1,0 +1,322 @@
+{
+  "version": "0.1.0",
+  "name": "neon_contracts",
+  "instructions": [
+    {
+      "name": "initializeProgram",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeBasisPoints",
+          "type": "u16"
+        },
+        {
+          "name": "oraclePubkey",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "createMatch",
+      "accounts": [
+        {
+          "name": "matchAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "funder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "matchId",
+          "type": "string"
+        },
+        {
+          "name": "entryFee",
+          "type": "u64"
+        },
+        {
+          "name": "maxPlayers",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "joinMatch",
+      "accounts": [
+        {
+          "name": "matchAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "playerEntry",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "player",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "escrowVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lockMatch",
+      "accounts": [
+        {
+          "name": "matchAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "distributeRewards",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "matchAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "winner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "instructionSysvar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "matchId",
+          "type": "string"
+        },
+        {
+          "name": "winnerPubkey",
+          "type": "publicKey"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "oracle",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeBasisPoints",
+            "type": "u16"
+          },
+          {
+            "name": "treasury",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MatchAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "matchId",
+            "type": "string"
+          },
+          {
+            "name": "entryFee",
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": "MatchState"
+            }
+          },
+          {
+            "name": "playerCount",
+            "type": "u8"
+          },
+          {
+            "name": "maxPlayers",
+            "type": "u8"
+          },
+          {
+            "name": "totalPot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "matchPubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "player",
+            "type": "publicKey"
+          },
+          {
+            "name": "deposited",
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "MatchState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Waiting"
+          },
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "MatchNotWaiting",
+      "msg": "Match is not waiting for players."
+    },
+    {
+      "code": 6001,
+      "name": "MatchFull",
+      "msg": "Match is full."
+    },
+    {
+      "code": 6002,
+      "name": "MatchNotLocked",
+      "msg": "Match is not locked."
+    },
+    {
+      "code": 6003,
+      "name": "InvalidMatchId",
+      "msg": "Submitted match ID does not match."
+    },
+    {
+      "code": 6004,
+      "name": "InvalidWinner",
+      "msg": "Invalid winner pubkey."
+    },
+    {
+      "code": 6005,
+      "name": "MissingEd25519Instruction",
+      "msg": "Missing required Ed25519 signature instruction."
+    },
+    {
+      "code": 6006,
+      "name": "InvalidOracleSignature",
+      "msg": "Oracle signature verification failed or pubkey mismatch."
+    }
+  ],
+  "metadata": {
+    "address": "ARcy8Hgks4bfNoYrrdCunrHbvE1dR8kiFHBCRu1Gw6Gi"
+  }
+}

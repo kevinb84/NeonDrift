@@ -1,0 +1,23 @@
+[package]
+name = "neon-contracts"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "neon_contracts"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.26.0"
+solana-program = "=1.16.27"
+blake3 = "=1.5.5"
+serde = "=1.0.215"
+serde_derive = "=1.0.215"

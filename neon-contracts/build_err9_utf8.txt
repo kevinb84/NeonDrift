@@ -1,0 +1,29 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build > build_err9.txt 2>&1
++                             
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+ Downloading crates ...
+  Downloaded ryu v1.0.18
+error: package `unicode-ident v1.0.24` 
+cannot be built because it requires 
+rustc 1.71 or newer, while the 
+currently active rustc version is 
+1.68.0-dev
+Either upgrade to rustc 1.71 or newer, 
+or use
+cargo update -p unicode-ident@1.0.24 
+--precise ver
+where `ver` is the latest version of 
+`unicode-ident` supporting rustc 
+1.68.0-dev

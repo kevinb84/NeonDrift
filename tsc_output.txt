@@ -1,0 +1,10 @@
+src/components/LandingPage.tsx(2,35): error TS2307: Cannot find module '@solana/wallet-adapter-react-ui' or its corresponding type declarations.
+src/components/LandingPage.tsx(3,27): error TS2307: Cannot find module '@solana/wallet-adapter-react' or its corresponding type declarations.
+src/components/WalletProvider.tsx(2,52): error TS2307: Cannot find module '@solana/wallet-adapter-react' or its corresponding type declarations.
+src/components/WalletProvider.tsx(3,38): error TS2307: Cannot find module '@solana/wallet-adapter-base' or its corresponding type declarations.
+src/components/WalletProvider.tsx(4,61): error TS2307: Cannot find module '@solana/wallet-adapter-wallets' or its corresponding type declarations.
+src/components/WalletProvider.tsx(5,37): error TS2307: Cannot find module '@solana/wallet-adapter-react-ui' or its corresponding type declarations.
+src/hooks/useBlueprint.ts(1,42): error TS2307: Cannot find module '@solana/wallet-adapter-react' or its corresponding type declarations.
+src/hooks/useProfile.ts(1,27): error TS2307: Cannot find module '@solana/wallet-adapter-react' or its corresponding type declarations.
+src/hooks/useTokenBalance.ts(1,42): error TS2307: Cannot find module '@solana/wallet-adapter-react' or its corresponding type declarations.
+src/hooks/useTokenBalance.ts(3,1): error TS6133: 'PublicKey' is declared but its value is never read.

@@ -1,0 +1,60 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded quote v1.0.45
+  Downloaded blake3 v1.5.5
+   Compiling quote v1.0.45
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.149
+   Compiling serde_core v1.0.228
+   Compiling generic-array v0.14.9
+   Compiling getrandom v0.3.4
+error: couldn't read \\?\C:\Users\Aji4r
+\OneDrive\Desktop\NeonProject\neon-cont
+racts\target\release\build\serde_core-8
+666f81ccb24ab4e\out/private.rs: The 
+filename, directory name, or volume 
+label syntax is incorrect. (os error 
+123)
+   --> C:\Users\Aji4r\.cargo\registry\s
+rc\index.crates.io-6f17d22bba15001f\ser
+de_core-1.0.228\src\crate_root.rs:165:9
+    |
+165 |         
+include!(concat!(env!("OUT_DIR"), 
+"/private.rs"));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+   ::: C:\Users\Aji4r\.cargo\registry\s
+rc\index.crates.io-6f17d22bba15001f\ser
+de_core-1.0.228\src/lib.rs:111:1
+    |
+111 | crate_root!();
+    | ------------- in this macro 
+invocation
+    |
+    = note: this error originates in 
+the macro `include` which comes from 
+the expansion of the macro 
+`crate_root` (in Nightly builds, run 
+with -Z macro-backtrace for more info)
+
+error: could not compile `serde_core` 
+(lib) due to previous error
+warning: build failed, waiting for 
+other jobs to finish...

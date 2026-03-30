@@ -1,0 +1,88 @@
+{
+  "functions": [
+    {
+      "id": "6523f1cc-35a3-4087-b683-b6b9bb37a4fe",
+      "slug": "wallet-auth",
+      "name": "wallet-auth",
+      "description": null,
+      "status": "active",
+      "createdAt": "2026-03-23T05:04:36.926Z",
+      "updatedAt": "2026-03-23T05:04:36.945Z",
+      "deployedAt": "2026-03-23T05:04:36.945Z"
+    },
+    {
+      "id": "1aa3e1cf-222a-48c2-9abb-d92c2dde56b9",
+      "slug": "launch-token-v3",
+      "name": "Launch Token V3",
+      "description": "Launch Token V3 (Fresh Deploy)",
+      "status": "active",
+      "createdAt": "2026-02-15T00:13:22.149Z",
+      "updatedAt": "2026-02-15T00:13:22.153Z",
+      "deployedAt": "2026-02-15T00:13:22.153Z"
+    },
+    {
+      "id": "7ebe61c2-7218-4a8f-b1c1-5fdb2086d3af",
+      "slug": "create-token-v2",
+      "name": "Create Token V2",
+      "description": "Create Token V2 (Cache Buster)",
+      "status": "active",
+      "createdAt": "2026-02-15T00:05:35.434Z",
+      "updatedAt": "2026-02-15T00:05:35.437Z",
+      "deployedAt": "2026-02-15T00:05:35.437Z"
+    },
+    {
+      "id": "3f9e3b07-976a-4c4d-9ecc-9af27ba2dacf",
+      "slug": "create-token",
+      "name": "Create Token",
+      "description": "Create Token 2-Step Flow V2",
+      "status": "active",
+      "createdAt": "2026-02-15T00:03:31.095Z",
+      "updatedAt": "2026-02-15T00:03:31.097Z",
+      "deployedAt": "2026-02-15T00:03:31.097Z"
+    },
+    {
+      "id": "0a12501f-1d7c-469c-b6de-250fa2c8b18c",
+      "slug": "test-create",
+      "name": "test-create",
+      "description": "Test Create with Correct URL",
+      "status": "active",
+      "createdAt": "2026-02-14T08:42:40.604Z",
+      "updatedAt": "2026-02-14T09:02:23.244Z",
+      "deployedAt": "2026-02-14T09:02:23.243Z"
+    },
+    {
+      "id": "36bf77a3-0d72-467a-9eb9-c010f75ac5e8",
+      "slug": "token-state",
+      "name": "Token State",
+      "description": "Token State Mock Fix",
+      "status": "active",
+      "createdAt": "2026-02-14T06:59:56.783Z",
+      "updatedAt": "2026-02-14T23:41:52.172Z",
+      "deployedAt": "2026-02-14T23:41:52.170Z"
+    },
+    {
+      "id": "4be940ad-5609-43c3-bc7b-d0062558bbb3",
+      "slug": "sell-token",
+      "name": "Sell Token",
+      "description": "Sell Token with Correct URL",
+      "status": "active",
+      "createdAt": "2026-02-14T06:59:56.635Z",
+      "updatedAt": "2026-02-14T23:41:44.409Z",
+      "deployedAt": "2026-02-14T23:41:44.408Z"
+    },
+    {
+      "id": "3cba60d1-7dd1-409e-a637-2bc5e0f36f41",
+      "slug": "buy-token",
+      "name": "Buy Token",
+      "description": "Buy Token with Correct URL",
+      "status": "active",
+      "createdAt": "2026-02-14T06:59:56.484Z",
+      "updatedAt": "2026-02-14T23:41:44.231Z",
+      "deployedAt": "2026-02-14T23:41:44.230Z"
+    }
+  ],
+  "runtime": {
+    "status": "running"
+  },
+  "deploymentUrl": "https://rv8ynnb5.functions.insforge.app"
+}

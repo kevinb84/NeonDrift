@@ -1,0 +1,38 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host rv8ynnb5.us-east.insforge.app:443 was resolved.
+* IPv6: (none)
+* IPv4: 3.129.201.50, 3.140.110.211, 3.129.0.106
+*   Trying 3.129.201.50:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* ALPN: server accepted http/1.1
+* Established connection to rv8ynnb5.us-east.insforge.app (3.129.201.50 port 443) from 10.0.0.153 port 50465 
+* using HTTP/1.x
+> POST /functions/test-create HTTP/1.1
+> Host: rv8ynnb5.us-east.insforge.app
+> User-Agent: curl/8.16.0
+> Accept: */*
+>  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwNDM0NTB9.WuPhoQoJFkOjPLs4dTVrk6BLG4eO_BdkPT0Wq0pUGKI
+> 
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 400 Bad Request
+< Date: Sat, 14 Feb 2026 08:50:46 GMT
+< Content-Type: text/html
+< Content-Length: 163
+< Connection: keep-alive
+< Server: openresty/1.27.1.2
+< 
+{ [163 bytes data]
+100   163  100   163    0     0    573      0 --:--:-- --:--:-- --:--:--   584
+* Connection #0 to host rv8ynnb5.us-east.insforge.app:443 left intact
+<html>
+<head><title>400 Bad Request</title></head>
+<body>
+<center><h1>400 Bad Request</h1></center>
+<hr><center>openresty/1.27.1.2</center>
+</body>
+</html>

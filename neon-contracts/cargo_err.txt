@@ -1,0 +1,82 @@
+﻿cargo : warning: 
+virtual workspace 
+defaulting to 
+`resolver = "1"` 
+despite one or more 
+workspace members 
+being on edition 2021 
+which implies 
+`resolver = "2"`
+At line:1 char:1
++ cargo check 2>&1 | 
+Out-File -FilePath 
+cargo_err.txt 
+-Encoding utf8
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (warning: virt   
+ ua...resolver = "2    
+"`:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+note: to keep the 
+current resolver, 
+specify 
+`workspace.resolver = 
+"1"` in the workspace 
+root's manifest
+note: to use the 
+edition 2021 resolver, 
+specify 
+`workspace.resolver = 
+"2"` in the workspace 
+root's manifest
+note: for more details 
+see https://doc.rust-la
+ng.org/cargo/reference/
+resolver.html#resolver-
+versions
+ Downloading crates ...
+error: failed to 
+download `blake3 
+v1.8.3`
+
+Caused by:
+  unable to get 
+packages from source
+
+Caused by:
+  failed to parse 
+manifest at `C:\Users\A
+ji4r\.cargo\registry\sr
+c\index.crates.io-6f17d
+22bba15001f\blake3-1.8.
+3\Cargo.toml`
+
+Caused by:
+  feature 
+`edition2024` is 
+required
+
+  The package requires 
+the Cargo feature 
+called `edition2024`, 
+but that feature is 
+not stabilized in this 
+version of Cargo 
+(1.79.0 (ffa9cf99a 
+2024-06-03)).
+  Consider trying a 
+newer version of Cargo 
+(this may require the 
+nightly release).
+  See https://doc.rust-
+lang.org/nightly/cargo/
+reference/unstable.html
+#edition-2024 for more 
+information about the 
+status of this feature.

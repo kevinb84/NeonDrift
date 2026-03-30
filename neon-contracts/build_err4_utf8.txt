@@ -1,0 +1,262 @@
+﻿anchor : info: 
+uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPR
+OFILE; anchor build > 
+build_err4.txt 2>&1
++                      
+       ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (info: uninsta   
+ lling toolchain 's    
+olana':String) [],     
+RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+info: toolchain 
+'solana' uninstalled
+   Compiling 
+serde_derive v1.0.215
+   Compiling 
+thiserror-impl v1.0.69
+   Compiling getrandom 
+v0.1.16
+   Compiling 
+libsecp256k1-core 
+v0.2.2
+   Compiling 
+crossbeam-epoch v0.9.18
+   Compiling zerocopy 
+v0.8.40
+   Compiling 
+rustversion v1.0.22
+Error: Function _ZN15cr
+ossbeam_epoch5guard5Gua
+rd5flush17h7f4c3c55d04a
+e71eE Stack offset of 
+4112 exceeded max 
+offset of 4096 by 16 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal6
+Global7collect17h4e8b3d
+4b11851f59E Stack 
+offset of 4152 
+exceeded max offset of 
+4096 by 56 bytes, 
+please minimize large 
+stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal5
+Local5defer17ha3d057498
+50939beE Stack offset 
+of 4176 exceeded max 
+offset of 4096 by 80 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal5
+Local8finalize17hac7b41
+6d1c060279E Stack 
+offset of 4104 
+exceeded max offset of 
+4096 by 8 bytes, 
+please minimize large 
+stack variables
+   Compiling once_cell 
+v1.21.3
+   Compiling 
+rayon-core v1.12.1
+   Compiling rand_core 
+v0.5.1
+   Compiling 
+crossbeam-deque v0.8.6
+   Compiling 
+wasm-bindgen-shared 
+v0.2.114
+   Compiling ahash 
+v0.7.8
+   Compiling shlex 
+v1.3.0
+   Compiling 
+find-msvc-tools v0.1.9
+   Compiling 
+feature-probe v0.1.1
+   Compiling either 
+v1.15.0
+   Compiling bv v0.11.1
+   Compiling cc v1.2.56
+   Compiling 
+ppv-lite86 v0.2.21
+   Compiling libsecp256
+k1-gen-genmult v0.2.1
+   Compiling libsecp256
+k1-gen-ecmult v0.2.1
+   Compiling solana-fro
+zen-abi-macro v1.13.7
+   Compiling thiserror 
+v1.0.69
+   Compiling crunchy 
+v0.2.4
+   Compiling bitmaps 
+v2.1.0
+   Compiling im v15.1.0
+   Compiling rand_core 
+v0.6.4
+   Compiling bumpalo 
+v3.20.2
+   Compiling autocfg 
+v1.5.0
+   Compiling wasm-bindg
+en-macro-support 
+v0.2.114
+   Compiling 
+sized-chunks v0.6.5
+   Compiling 
+rand_xoshiro v0.6.0
+   Compiling 
+libsecp256k1 v0.6.0
+   Compiling 
+rand_chacha v0.2.2
+   Compiling rayon 
+v1.10.0
+   Compiling 
+num-traits v0.2.19
+   Compiling 
+wasm-bindgen v0.2.114
+   Compiling 
+solana-frozen-abi 
+v1.13.7
+   Compiling 
+borsh-derive-internal 
+v0.9.3
+   Compiling 
+aho-corasick v1.1.4
+   Compiling blake3 
+v1.5.4
+   Compiling borsh-sche
+ma-derive-internal 
+v0.9.3
+   Compiling arrayref 
+v0.3.9
+   Compiling 
+opaque-debug v0.3.1
+   Compiling 
+regex-syntax v0.8.10
+   Compiling 
+unicode-ident v1.0.24
+   Compiling bs58 
+v0.4.0
+   Compiling 
+regex-automata v0.4.14
+   Compiling hashbrown 
+v0.11.2
+   Compiling serde 
+v1.0.215
+   Compiling 
+generic-array v0.14.9
+   Compiling 
+serde_json v1.0.143
+   Compiling toml 
+v0.5.11
+   Compiling digest 
+v0.9.0
+   Compiling 
+anchor-syn v0.26.0
+   Compiling 
+crypto-common v0.1.6
+   Compiling 
+block-buffer v0.10.4
+   Compiling digest 
+v0.10.7
+   Compiling 
+crypto-mac v0.8.0
+   Compiling hmac 
+v0.8.1
+   Compiling 
+proc-macro-crate v0.1.5
+   Compiling 
+block-buffer v0.9.0
+   Compiling sha2 
+v0.9.9
+   Compiling hmac-drbg 
+v0.3.0
+   Compiling sha2 
+v0.10.9
+   Compiling 
+borsh-derive v0.9.3
+   Compiling 
+serde_bytes v0.11.17
+   Compiling rand 
+v0.7.3
+   Compiling 
+solana-program v1.13.7
+   Compiling 
+bytemuck_derive v1.10.2
+   Compiling memmap2 
+v0.5.10
+   Compiling 
+lazy_static v1.5.0
+   Compiling 
+constant_time_eq v0.3.1
+   Compiling byteorder 
+v1.5.0
+   Compiling keccak 
+v0.1.6
+   Compiling zeroize 
+v1.3.0
+   Compiling 
+wasm-bindgen-macro 
+v0.2.114
+   Compiling arrayvec 
+v0.7.6
+   Compiling base64 
+v0.12.3
+   Compiling log 
+v0.4.29
+error: couldn't read \\
+?\C:\Users\Aji4r\OneDri
+ve\Desktop\NeonProject\
+neon-contracts\target\s
+bf-solana-solana\releas
+e\build\libsecp256k1-ef
+f5464cd4b7c5e6\out/cons
+t.rs: The filename, 
+directory name, or 
+volume label syntax is 
+incorrect. (os error 
+123)
+  --> src\lib.rs:56:42
+   |
+56 |     unsafe { ECMul
+tContext::new_from_raw(
+include!(concat!(env!("
+OUT_DIR"), 
+"/const.rs"))) };
+   |                   
+                       
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^
+   |
+   = note: this error 
+originates in the 
+macro `include` (in 
+Nightly builds, run 
+with -Z 
+macro-backtrace for 
+more info)
+
+error: could not 
+compile `libsecp256k1` 
+(lib) due to previous 
+error
+warning: build failed, 
+waiting for other jobs 
+to finish...

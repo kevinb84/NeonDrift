@@ -1,0 +1,46 @@
+﻿anchor : info: uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPROFILE; anchor 
+build 2>&1 | Out-File -Encoding ut ...
++                             
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpeci 
+   fied: (info: uninstalling toolchai  
+  n 'solana':String) [], RemoteExcep   
+ tion
+    + FullyQualifiedErrorId : NativeCo 
+   mmandError
+ 
+info: toolchain 'solana' uninstalled
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded ark-ff-macros v0.4.2
+  Downloaded pbkdf2 v0.4.0
+  Downloaded borsh-derive v0.10.4
+  Downloaded solana-sdk-macro v1.16.27
+  Downloaded tinyvec_macros v0.1.1
+  Downloaded zmij v1.0.21
+  Downloaded derivative v2.2.0
+  Downloaded tinyvec v1.10.0
+  Downloaded tiny-bip39 v0.8.2
+  Downloaded base64 v0.21.7
+  Downloaded unicode-normalization 
+v0.1.25
+  Downloaded num-bigint v0.4.6
+  Downloaded serde_json v1.0.149
+  Downloaded solana-program v1.16.27
+  Downloaded libc v0.2.182
+  Downloaded blake3 v1.8.3
+error: failed to parse manifest at `C:\
+Users\Aji4r\.cargo\registry\src\github.
+com-1ecc6299db9ec823\blake3-1.8.3\Cargo
+.toml`
+
+Caused by:
+  failed to parse the `edition` key
+
+Caused by:
+  this version of Cargo is older than 
+the `2024` edition, and only supports 
+`2015`, `2018`, and `2021` editions.

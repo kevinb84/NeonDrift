@@ -1,0 +1,126 @@
+﻿anchor : info: 
+uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPR
+OFILE; anchor build 2> 
+build_err3.txt
++                      
+       ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (info: uninsta   
+ lling toolchain 's    
+olana':String) [],     
+RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+info: toolchain 
+'solana' uninstalled
+   Compiling serde 
+v1.0.215
+   Compiling syn 
+v2.0.117
+   Compiling syn 
+v1.0.109
+   Compiling digest 
+v0.9.0
+   Compiling 
+generic-array v0.14.9
+   Compiling cfg-if 
+v1.0.4
+   Compiling memchr 
+v2.8.0
+   Compiling proc-macro
+2-diagnostics v0.9.1
+   Compiling crunchy 
+v0.2.4
+   Compiling subtle 
+v2.6.1
+   Compiling anyhow 
+v1.0.102
+   Compiling 
+serde_json v1.0.143
+   Compiling 
+block-buffer v0.9.0
+   Compiling thiserror 
+v1.0.69
+   Compiling 
+opaque-debug v0.3.1
+   Compiling ryu 
+v1.0.23
+   Compiling itoa 
+v1.0.17
+   Compiling 
+cpufeatures v0.2.17
+   Compiling 
+unicode-segmentation 
+v1.12.0
+   Compiling yansi 
+v0.5.1
+   Compiling sha2 
+v0.9.9
+   Compiling heck 
+v0.3.3
+   Compiling semver 
+v1.0.27
+   Compiling bs58 
+v0.3.1
+   Compiling 
+rustc_version v0.4.1
+   Compiling 
+crossbeam-utils v0.8.21
+   Compiling 
+wasm-bindgen-shared 
+v0.2.114
+   Compiling getrandom 
+v0.1.16
+   Compiling 
+rustversion v1.0.22
+   Compiling zerocopy 
+v0.8.40
+error: target is not 
+supported, for more 
+information see: https:
+//docs.rs/getrandom/#un
+supported-targets
+   --> src\lib.rs:267:9
+    |
+267 | /         
+compile_error!("\
+268 | |             
+target is not 
+supported, for more 
+information see: \
+269 | |             htt
+ps://docs.rs/getrandom/
+#unsupported-targets\
+270 | |         ");
+    | |__________^
+
+error[E0433]: failed 
+to resolve: use of 
+undeclared crate or 
+module `imp`
+   --> src\lib.rs:291:5
+    |
+291 |     imp::getrando
+m_inner(dest)
+    |     ^^^ use of 
+undeclared crate or 
+module `imp`
+
+For more information 
+about this error, try 
+`rustc --explain 
+E0433`.
+error: could not 
+compile `getrandom` 
+(lib) due to 2 
+previous errors
+warning: build failed, 
+waiting for other jobs 
+to finish...

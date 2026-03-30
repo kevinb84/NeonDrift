@@ -1,0 +1,155 @@
+{
+  "auth": {
+    "oAuthProviders": [
+      "github",
+      "google"
+    ],
+    "requireEmailVerification": true,
+    "passwordMinLength": 6,
+    "requireNumber": false,
+    "requireLowercase": false,
+    "requireUppercase": false,
+    "requireSpecialChar": false,
+    "verifyEmailMethod": "code",
+    "resetPasswordMethod": "code"
+  },
+  "database": {
+    "tables": [
+      {
+        "tableName": "matches",
+        "recordCount": 0
+      },
+      {
+        "tableName": "profiles",
+        "recordCount": 1
+      },
+      {
+        "tableName": "race_results",
+        "recordCount": 0
+      }
+    ],
+    "totalSizeInGB": 0.009243770502507687,
+    "hint": "To retrieve detailed schema information for a specific table, call the get-table-schema tool with the table name."
+  },
+  "storage": {
+    "buckets": [
+      {
+        "name": "token-images",
+        "public": true,
+        "createdAt": "2026-02-14T23:44:41.421Z",
+        "objectCount": 24
+      }
+    ],
+    "totalSizeInGB": 0.024608664214611053
+  },
+  "functions": [
+    {
+      "slug": "launch-token-v3",
+      "name": "Launch Token V3",
+      "description": "Launch Token V3 (Fresh Deploy)",
+      "status": "active"
+    },
+    {
+      "slug": "create-token-v2",
+      "name": "Create Token V2",
+      "description": "Create Token V2 (Cache Buster)",
+      "status": "active"
+    },
+    {
+      "slug": "create-token",
+      "name": "Create Token",
+      "description": "Create Token 2-Step Flow V2",
+      "status": "active"
+    },
+    {
+      "slug": "test-create",
+      "name": "test-create",
+      "description": "Test Create with Correct URL",
+      "status": "active"
+    },
+    {
+      "slug": "token-state",
+      "name": "Token State",
+      "description": "Token State Mock Fix",
+      "status": "active"
+    },
+    {
+      "slug": "sell-token",
+      "name": "Sell Token",
+      "description": "Sell Token with Correct URL",
+      "status": "active"
+    },
+    {
+      "slug": "buy-token",
+      "name": "Buy Token",
+      "description": "Buy Token with Correct URL",
+      "status": "active"
+    }
+  ],
+  "aiIntegration": {
+    "models": [
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text"
+        ],
+        "modelId": "deepseek/deepseek-v3.2"
+      },
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text"
+        ],
+        "modelId": "minimax/minimax-m2.1"
+      },
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text"
+        ],
+        "modelId": "x-ai/grok-4.1-fast"
+      },
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text"
+        ],
+        "modelId": "anthropic/claude-sonnet-4.5"
+      },
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text"
+        ],
+        "modelId": "openai/gpt-4o-mini"
+      },
+      {
+        "inputModality": [
+          "text",
+          "image"
+        ],
+        "outputModality": [
+          "text",
+          "image"
+        ],
+        "modelId": "google/gemini-3-pro-image-preview"
+      }
+    ]
+  },
+  "version": "1.0.0"
+}

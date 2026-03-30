@@ -1,0 +1,319 @@
+﻿anchor : info: 
+uninstalling toolchain 
+'solana'
+At line:1 char:29
++ $env:HOME=$env:USERPR
+OFILE; anchor build > 
+build_err5.txt 2>&1
++                      
+       ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (info: uninsta   
+ lling toolchain 's    
+olana':String) [],     
+RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+info: toolchain 
+'solana' uninstalled
+Error: Function _ZN15cr
+ossbeam_epoch5guard5Gua
+rd5flush17h7f4c3c55d04a
+e71eE Stack offset of 
+4112 exceeded max 
+offset of 4096 by 16 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal6
+Global7collect17h4e8b3d
+4b11851f59E Stack 
+offset of 4152 
+exceeded max offset of 
+4096 by 56 bytes, 
+please minimize large 
+stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal5
+Local5defer17ha3d057498
+50939beE Stack offset 
+of 4176 exceeded max 
+offset of 4096 by 80 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN15cr
+ossbeam_epoch8internal5
+Local8finalize17hac7b41
+6d1c060279E Stack 
+offset of 4104 
+exceeded max offset of 
+4096 by 8 bytes, 
+please minimize large 
+stack variables
+   Compiling 
+libsecp256k1 v0.6.0
+   Compiling 
+solana-frozen-abi 
+v1.13.7
+   Compiling blake3 
+v1.5.4
+   Compiling sha3 
+v0.10.8
+   Compiling 
+curve25519-dalek v3.2.1
+   Compiling bytemuck 
+v1.25.0
+   Compiling 
+num-traits v0.2.19
+   Compiling 
+wasm-bindgen v0.2.114
+error[E0425]: cannot 
+find function 
+`panic_any` in module 
+`std::panic`
+  --> 
+src\rt\mod.rs:33:19
+   |
+33 |     ::std::panic::
+panic_any(err);
+   |                   
+^^^^^^^^^ not found in 
+`std::panic`
+   |
+note: found an item 
+that was configured out
+  --> C:\out\rust\libra
+ry\std\src\panic.rs:64:
+8
+
+   Compiling 
+solana-program v1.13.7
+   Compiling borsh 
+v0.9.3
+For more information 
+about this error, try 
+`rustc --explain 
+E0425`.
+   Compiling regex 
+v1.12.3
+The following warnings 
+were emitted during 
+compilation:
+
+warning: 
+wasm-bindgen@0.2.114: 
+cargo:rustc-check-cfg 
+requires -Zcheck-cfg 
+flag
+warning: 
+wasm-bindgen@0.2.114: 
+cargo:rustc-check-cfg 
+requires -Zcheck-cfg 
+flag
+
+error: could not 
+compile `wasm-bindgen` 
+(lib) due to previous 
+error
+warning: build failed, 
+waiting for other jobs 
+to finish...
+Error: Function _ZN209_
+$LT$curve25519_dalek..w
+indow..NafLookupTable8$
+LT$curve25519_dalek..ba
+ckend..serial..curve_mo
+dels..ProjectiveNielsPo
+int$GT$$u20$as$u20$core
+..convert..From$LT$$RF$
+curve25519_dalek..edwar
+ds..EdwardsPoint$GT$$GT
+$4from17h74c77da49c927d
+1eE Stack offset of 
+10984 exceeded max 
+offset of 4096 by 6888 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN205_
+$LT$curve25519_dalek..w
+indow..NafLookupTable8$
+LT$curve25519_dalek..ba
+ckend..serial..curve_mo
+dels..AffineNielsPoint$
+GT$$u20$as$u20$core..co
+nvert..From$LT$$RF$curv
+e25519_dalek..edwards..
+EdwardsPoint$GT$$GT$4fr
+om17h420db740c0e19179E 
+Stack offset of 8352 
+exceeded max offset of 
+4096 by 4256 bytes, 
+please minimize large 
+stack variables
+Error: Function _ZN116_
+$LT$curve25519_dalek..e
+dwards..EdwardsBasepoin
+tTableRadix16$u20$as$u2
+0$curve25519_dalek..tra
+its..BasepointTable$GT$
+6create17h66a1af38fac8c
+d25E Stack offset of 
+31832 exceeded max 
+offset of 4096 by 
+27736 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN116_
+$LT$curve25519_dalek..e
+dwards..EdwardsBasepoin
+tTableRadix32$u20$as$u2
+0$curve25519_dalek..tra
+its..BasepointTable$GT$
+6create17ha3f9889543d6a
+d2aE Stack offset of 
+63528 exceeded max 
+offset of 4096 by 
+59432 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN116_
+$LT$curve25519_dalek..e
+dwards..EdwardsBasepoin
+tTableRadix64$u20$as$u2
+0$curve25519_dalek..tra
+its..BasepointTable$GT$
+6create17h5286ed6860247
+7bfE Stack offset of 
+236832 exceeded max 
+offset of 4096 by 
+232736 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN117_
+$LT$curve25519_dalek..e
+dwards..EdwardsBasepoin
+tTableRadix128$u20$as$u
+20$curve25519_dalek..tr
+aits..BasepointTable$GT
+$6create17hdcf36ab077ce
+52e3E Stack offset of 
+491688 exceeded max 
+offset of 4096 by 
+487592 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN117_
+$LT$curve25519_dalek..e
+dwards..EdwardsBasepoin
+tTableRadix256$u20$as$u
+20$curve25519_dalek..tr
+aits..BasepointTable$GT
+$6create17h0528ecd49cfa
+d4a3E Stack offset of 
+983208 exceeded max 
+offset of 4096 by 
+979112 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN212_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+64$LT$curve25519_dalek.
+.backend..serial..curve
+_models..ProjectiveNiel
+sPoint$GT$$u20$as$u20$c
+ore..convert..From$LT$$
+RF$curve25519_dalek..ed
+wards..EdwardsPoint$GT$
+$GT$4from17h459b42cd0a4
+7d00fE Stack offset of 
+5648 exceeded max 
+offset of 4096 by 1552 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN208_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+64$LT$curve25519_dalek.
+.backend..serial..curve
+_models..AffineNielsPoi
+nt$GT$$u20$as$u20$core.
+.convert..From$LT$$RF$c
+urve25519_dalek..edward
+s..EdwardsPoint$GT$$GT$
+4from17h6d4c18033ed19b1
+4E Stack offset of 
+4360 exceeded max 
+offset of 4096 by 264 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN213_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+128$LT$curve25519_dalek
+..backend..serial..curv
+e_models..ProjectiveNie
+lsPoint$GT$$u20$as$u20$
+core..convert..From$LT$
+$RF$curve25519_dalek..e
+dwards..EdwardsPoint$GT
+$$GT$4from17h790eb1e3f1
+0c1b8aE Stack offset 
+of 10768 exceeded max 
+offset of 4096 by 6672 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN209_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+128$LT$curve25519_dalek
+..backend..serial..curv
+e_models..AffineNielsPo
+int$GT$$u20$as$u20$core
+..convert..From$LT$$RF$
+curve25519_dalek..edwar
+ds..EdwardsPoint$GT$$GT
+$4from17h6977affc63efdc
+69E Stack offset of 
+8200 exceeded max 
+offset of 4096 by 4104 
+bytes, please minimize 
+large stack variables
+Error: Function _ZN213_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+256$LT$curve25519_dalek
+..backend..serial..curv
+e_models..ProjectiveNie
+lsPoint$GT$$u20$as$u20$
+core..convert..From$LT$
+$RF$curve25519_dalek..e
+dwards..EdwardsPoint$GT
+$$GT$4from17h6869283225
+46d70dE Stack offset 
+of 21008 exceeded max 
+offset of 4096 by 
+16912 bytes, please 
+minimize large stack 
+variables
+Error: Function _ZN209_
+$LT$curve25519_dalek..w
+indow..LookupTableRadix
+256$LT$curve25519_dalek
+..backend..serial..curv
+e_models..AffineNielsPo
+int$GT$$u20$as$u20$core
+..convert..From$LT$$RF$
+curve25519_dalek..edwar
+ds..EdwardsPoint$GT$$GT
+$4from17h5a583fd8a79b6d
+19E Stack offset of 
+15880 exceeded max 
+offset of 4096 by 
+11784 bytes, please 
+minimize large stack 
+variables

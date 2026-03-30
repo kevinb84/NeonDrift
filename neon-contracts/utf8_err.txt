@@ -1,0 +1,80 @@
+﻿cargo :     Checking 
+neon-contracts v0.1.0 (
+C:\Users\Aji4r\OneDrive
+\Desktop\NeonProject\ne
+on-contracts\programs\n
+eon-contracts)
+At line:1 char:1
++ cargo check > 
+compile_err.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo     
+         : 
+NotSpecified:     (    
+Checking ne...n    
+eon-contracts):Strin   
+ g) [], RemoteExcepti  
+  on
+    + 
+FullyQualifiedErro    
+rId : NativeCommandE   
+ rror
+ 
+error[E0433]: failed 
+to resolve: use of 
+undeclared crate or 
+module `solana_program`
+ --> programs\neon-cont
+racts\src\lib.rs:2:5
+  |
+2 | use 
+solana_program::{
+  |     ^^^^^^^^^^^^^^ 
+use of undeclared 
+crate or module 
+`solana_program`
+
+error[E0432]: 
+unresolved import 
+`solana_program`
+ --> programs\neon-cont
+racts\src\lib.rs:2:5
+  |
+2 | use 
+solana_program::{
+  |     ^^^^^^^^^^^^^^ 
+help: a similar path 
+exists: `anchor_lang::s
+olana_program`
+
+error[E0609]: no field 
+`escrow_vault` on type 
+`BTreeMap<String, u8>`
+   --> programs\neon-co
+ntracts\src\lib.rs:115:
+68
+    |
+115 |         let 
+seeds = &[b"vault", 
+match_pubkey.as_ref(), 
+&[ctx.bumps.escrow_vaul
+t]];
+    |                  
+                       
+                       
+    ^^^^^^^^^^^^ 
+unknown field
+
+Some errors have 
+detailed explanations: 
+E0432, E0433, E0609.
+For more information 
+about an error, try 
+`rustc --explain 
+E0432`.
+error: could not 
+compile 
+`neon-contracts` (lib) 
+due to 3 previous 
+errors
