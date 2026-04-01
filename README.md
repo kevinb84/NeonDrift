@@ -28,7 +28,7 @@ Players can stake their tokens via Bags.fm bonding curves, race against real-tim
 
 ---
 
-## 🚀 The Bags.fm Integration (Hackathon Core)
+## 🚀 The Bags.fm Integration 
 This project deeply integrates with the Bags.fm API to handle all ecosystem tokenomics natively within our `Dashboard`:
 
 1. **Ecosystem Deployer Engine (`CreateToken.tsx`)**
