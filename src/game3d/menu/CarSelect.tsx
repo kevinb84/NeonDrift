@@ -5,9 +5,6 @@ import * as THREE from 'three';
 import { CARS, CarConfig } from './useGameFlow';
 import { NeonButton, GhostButton } from './TitleScreen';
 
-// Pre-load all models for instant switching
-CARS.forEach(car => useGLTF.preload(`/models/${car.modelFile}`));
-
 const FONT = "'Orbitron', monospace, sans-serif";
 
 const RARITY_COLOR: Record<string, string> = {
@@ -53,6 +50,15 @@ function CarModel3D({ modelFile, glowColor }: { modelFile: string; glowColor: st
     );
 }
 
+function CarPreviewFallback() {
+    return (
+        <mesh>
+            <boxGeometry args={[1.5, 0.5, 3]} />
+            <meshStandardMaterial color="#333" wireframe={true} />
+        </mesh>
+    );
+}
+
 function CarPreviewCanvas({ car }: { car: CarConfig }) {
     return (
         <Canvas
@@ -63,7 +69,7 @@ function CarPreviewCanvas({ car }: { car: CarConfig }) {
             <ambientLight intensity={0.3} />
             <directionalLight position={[5, 8, 5]} intensity={1.5} color="#aaccff" />
             <directionalLight position={[-5, 4, -5]} intensity={0.8} color={car.glowColor} />
-            <Suspense fallback={null}>
+            <Suspense fallback={<CarPreviewFallback />}>
                 <CarModel3D modelFile={car.modelFile} glowColor={car.glowColor} />
                 <Environment preset="night" />
             </Suspense>

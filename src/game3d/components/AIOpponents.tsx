@@ -1,17 +1,14 @@
-import { useRef, useMemo } from 'react';
+import { Suspense, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { ROAD_WIDTH, LANE_COUNT, LANE_WIDTH } from './Road';
 import { getCurveOffset } from '../utils/curveOffset';
 import { BODY_Y } from '../physics/vehiclePhysics';
+import { CARS } from '../menu/useGameFlow';
 
 const AI_COUNT = 4;
 const LAP_DISTANCE = 2000;
-
-// One GLB, shared — already in memory when player car uses car-01.glb
-const SHARED_GLB = 'car-01.glb';
-useGLTF.preload(`/models/${SHARED_GLB}`);
 
 // Unique RGB tint per car slot
 const AI_TINTS: [number, number, number][] = [
@@ -91,15 +88,32 @@ function cloneWithTint(scene: THREE.Group, tint: [number, number, number]): THRE
     return c as unknown as THREE.Group;
 }
 
+function AIFallback() {
+    return (
+        <mesh castShadow>
+            <boxGeometry args={[1.8, 0.45, 3.5]} />
+            <meshStandardMaterial color="#0d0d1a" metalness={0.85} roughness={0.2} />
+        </mesh>
+    );
+}
+
+function AICarModel({ modelFile, tint }: { modelFile: string; tint: [number, number, number] }) {
+    const { scene } = useGLTF(`/models/${modelFile}`);
+    const cloned = useMemo(() => cloneWithTint(scene as unknown as THREE.Group, tint), [scene, tint]);
+    return <primitive object={cloned} />;
+}
+
 // ── Per-car rendered group — own ref + own useFrame ──────────────────
 function AISingleCar({
     carState,
-    cloned,
+    modelFile,
+    tint,
     playerDistRef,
     track,
 }: {
     carState: AICar;
-    cloned: THREE.Group;
+    modelFile: string;
+    tint: [number, number, number];
     playerDistRef?: React.MutableRefObject<number>;
     track?: import('../menu/useGameFlow').TrackConfig;
 }) {
@@ -116,7 +130,9 @@ function AISingleCar({
 
     return (
         <group ref={groupRef}>
-            <primitive object={cloned} />
+            <Suspense fallback={<AIFallback />}>
+                <AICarModel modelFile={modelFile} tint={tint} />
+            </Suspense>
         </group>
     );
 }
@@ -132,13 +148,18 @@ export function AIOpponents({
     aiKnockbackRef,
     randomFn,
 }: Props) {
-    // Load shared GLB ONCE here — not inside 4 child hooks
-    const { scene } = useGLTF(`/models/${SHARED_GLB}`);
-
-    // Create 4 tinted clones from the single loaded scene
-    const clones = useMemo(() => {
-        return AI_TINTS.map(tint => cloneWithTint(scene as unknown as THREE.Group, tint));
-    }, [scene]);
+    // Select deterministic but distinct models for the 4 AI slots
+    const aiModels = useMemo(() => {
+        let avail = [...CARS];
+        const selected = [];
+        for (let i = 0; i < AI_COUNT; i++) {
+             // Deterministic choice so they don't pop/reload
+             const idx = Math.floor(randomFn() * avail.length * 0.999);
+             selected.push(avail.splice(idx, 1)[0].modelFile);
+        }
+        return selected;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // AI state — initialised once with useMemo
     const cars = useMemo<AICar[]>(() => {
@@ -228,7 +249,8 @@ export function AIOpponents({
                 <AISingleCar
                     key={car.idx}
                     carState={car}
-                    cloned={clones[i]}
+                    modelFile={aiModels[i]}
+                    tint={AI_TINTS[i % AI_TINTS.length]}
                     playerDistRef={playerDistRef}
                     track={track}
                 />
