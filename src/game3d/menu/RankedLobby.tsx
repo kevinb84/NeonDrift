@@ -5,6 +5,7 @@ import { useMatchmaking, MatchRecord } from '../../hooks/useMatchmaking';
 import { useRankedMatch } from '../../hooks/useRankedMatch';
 import { useWalletAuth } from '../../hooks/useWalletAuth';
 import { NeonButton, GhostButton } from './TitleScreen';
+import { ChatPanel } from './ChatPanel';
 
 const FONT = "'Orbitron', monospace, sans-serif";
 
@@ -93,7 +94,7 @@ function MatchCard({
                 fontFamily: FONT, fontSize: 14, fontWeight: 700,
                 color: '#ffaa00', minWidth: 80, textAlign: 'center',
             }}>
-                {match.entry_fee} SOL
+                {match.entry_fee} Neon
             </div>
 
             {/* Players */}
@@ -227,7 +228,7 @@ function WaitingForOpponent({ match, onCancel }: { match: MatchRecord; onCancel:
                 Match ID: <span style={{ color: '#888' }}>{match.id}</span>
             </p>
             <p style={{ fontFamily: FONT, fontSize: 14, color: '#ffaa00', marginBottom: 32 }}>
-                ⚡ {match.entry_fee} SOL Stake
+                ⚡ {match.entry_fee} Neon Stake
             </p>
             <p style={{ fontSize: 12, color: '#555', marginBottom: 24 }}>
                 Share the Match ID with a friend, or wait for someone to join from the lobby.
@@ -283,7 +284,7 @@ function MatchReady({ match, isCreator }: { match: MatchRecord; isCreator: boole
                 </div>
             </div>
             <p style={{ fontFamily: FONT, fontSize: 14, color: '#ffaa00', marginBottom: 8 }}>
-                ⚡ {match.entry_fee} SOL each
+                ⚡ {match.entry_fee} Neon each
             </p>
             <p style={{ fontFamily: FONT, fontSize: 11, color: '#555', letterSpacing: 2 }}>
                 LAUNCHING RACE...
@@ -461,7 +462,10 @@ export function RankedLobby({ onMatchReady, onBack }: Props) {
             </div>
 
             {/* Main content */}
-            <div style={{ width: '100%', maxWidth: 700, padding: '0 24px', flex: 1 }}>
+            <div style={{ width: '100%', maxWidth: 1100, padding: '0 24px', flex: 1, display: 'flex', gap: 24, flexDirection: 'row' }}>
+
+                {/* Left Side: Matchmaking */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
                 {/* Not connected */}
                 {!wallet.connected ? (
@@ -513,7 +517,7 @@ export function RankedLobby({ onMatchReady, onBack }: Props) {
                             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ color: '#555', fontSize: 10, letterSpacing: 2, display: 'block', marginBottom: 6 }}>
-                                        STAKE (SOL)
+                                        STAKE (Neon)
                                     </label>
                                     <input
                                         type="number"
@@ -599,6 +603,19 @@ export function RankedLobby({ onMatchReady, onBack }: Props) {
                             )}
                         </div>
                     </>
+                )}
+                </div>
+
+                {/* Right Side: Chat Panel */}
+                {wallet.connected && isAuthenticated && (
+                    <div style={{ width: 380, flexShrink: 0 }}>
+                        <div style={{ marginBottom: 12 }}>
+                            <h3 style={{ color: '#fff', fontSize: 14, letterSpacing: 2 }}>
+                                COMM LINK
+                            </h3>
+                        </div>
+                        <ChatPanel />
+                    </div>
                 )}
             </div>
 

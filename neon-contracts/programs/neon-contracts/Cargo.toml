@@ -17,6 +17,7 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
+anchor-spl = "0.26.0"
 solana-program = "=1.16.27"
 blake3 = "=1.5.5"
 serde = "=1.0.215"

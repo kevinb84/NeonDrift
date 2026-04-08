@@ -1,200 +1,198 @@
-import { useRef } from 'react';
+import { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { GameControls } from '../hooks/useGameControls';
 import { ROAD_WIDTH } from './Road';
 import { TrackConfig } from '../menu/useGameFlow';
 import { getCurveOffset } from '../utils/curveOffset';
+import {
+    createCarPhysState,
+    stepCarPhysics,
+    BODY_Y,
+} from '../physics/vehiclePhysics';
 
-const STEER_SPEED = 14;
-const MAX_X = ROAD_WIDTH / 2 - 1.5; // Keep car within road edges
-const TILT_AMOUNT = 0.12;
-const CAR_Y = 0.5;  // Car base height above road
+// Road boundary — extra margin accounts for curveOffset shifting visual position
+// ROAD_WIDTH=24 → MAX_X=9.5 keeps car well inside the kerb on curves too
+const MAX_X = ROAD_WIDTH / 2 - 2.5;
+
+// ── Drift/grip tuning ─────────────────────────────────────────────────────
+const GRIP_LOSS_RATE  = 6.0;
+const GRIP_GAIN_RATE  = 4.0;
+const MIN_GRIP        = 0.25;
+const DRIFT_THRESHOLD = 0.55;
+const MAX_DRIFT_ANGLE = 0.38;  // reduced from 0.45 — less extreme yaw
+const EXIT_BOOST_TIME = 0.35;
+const EXIT_BOOST_MULT = 1.18;
 
 interface CarProps {
     controls: React.RefObject<GameControls>;
-    speed: React.RefObject<number>;
+    speed: React.MutableRefObject<number>;
     nitroActive?: React.RefObject<boolean>;
     onPositionChange?: (x: number) => void;
+    onDriftChange?: (drifting: boolean, grip: number) => void;
     playerDistRef?: React.MutableRefObject<number>;
     track?: TrackConfig;
     knockbackRef?: React.MutableRefObject<number>;
+    driftStateRef?: React.MutableRefObject<{ drifting: boolean; grip: number; exitBoost: number }>;
+    modelFile?: string;
 }
 
-/**
- * Player car — faces -Z (forward direction).
- * Positioned at a fixed Z, road scrolls toward camera to simulate movement.
- */
-export function Car({ controls, speed, nitroActive, onPositionChange, playerDistRef, track, knockbackRef }: CarProps) {
-    const groupRef = useRef<THREE.Group>(null);
-    const steerRef = useRef(0);
-    const flame1Ref = useRef<THREE.Mesh>(null);
-    const flame2Ref = useRef<THREE.Mesh>(null);
-    const flameLightRef = useRef<THREE.PointLight>(null);
+// ── GLB model — visual only, NOT used for physics ─────────────────────────
+function CarModel({ modelFile }: { modelFile: string }) {
+    const { scene } = useGLTF(`/models/${modelFile}`);
+
+    const cloned = useMemo(() => {
+        const c = scene.clone(true);
+
+        // 1. Orient model BEFORE measuring — GLB exported facing +X, we need -Z
+        c.rotation.set(0, Math.PI / 2, 0);
+        c.updateMatrixWorld(true);
+
+        // 2. Measure in correct orientation for accurate scale
+        const box = new THREE.Box3().setFromObject(c);
+        const size = box.getSize(new THREE.Vector3());
+        const scale = 4.0 / Math.max(size.x, size.y, size.z);
+        c.scale.setScalar(scale);
+
+        // 3. Recompute after scale — center the pivot at ground level
+        c.updateMatrixWorld(true);
+        const scaledBox = new THREE.Box3().setFromObject(c);
+        const center = scaledBox.getCenter(new THREE.Vector3());
+        c.position.set(-center.x, -scaledBox.min.y, -center.z);
+
+        c.traverse(child => {
+            if ((child as THREE.Mesh).isMesh) child.castShadow = true;
+        });
+        return c;
+    }, [scene]);
+
+    return (
+        <group>
+            <primitive object={cloned} />
+        </group>
+    );
+}
+
+function CarFallback() {
+    return (
+        <group>
+            {/* Box collider visualised as fallback — matches COLLIDER dimensions */}
+            <mesh castShadow>
+                <boxGeometry args={[1.8, 0.5, 3.6]} />
+                <meshStandardMaterial color="#0d0d1a" metalness={0.85} roughness={0.2} />
+            </mesh>
+            <mesh position={[0, -0.28, 0]}>
+                <boxGeometry args={[1.6, 0.04, 3.4]} />
+                <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={4} transparent opacity={0.9} toneMapped={false} />
+            </mesh>
+        </group>
+    );
+}
+
+// ── Main Car ──────────────────────────────────────────────────────────────
+export function Car({
+    controls, speed, nitroActive: _nitroActive, onPositionChange, onDriftChange,
+    playerDistRef, track, knockbackRef, driftStateRef,
+    modelFile = 'car-01.glb',
+}: CarProps) {
+    const groupRef  = useRef<THREE.Group>(null);
+    const steerRef  = useRef(0);
+    const gripRef   = useRef(1.0);
+    const exitBoost = useRef(0);
+
+    // Physics body — state lives between frames (NOT re-created each render)
+    const phys = useRef(createCarPhysState());
 
     useFrame((_, dt) => {
         if (!groupRef.current || !controls.current) return;
         const ctrl = controls.current;
+        const spd  = speed.current ?? 30;
 
-        // Steer input
+        // ── 1. Read controls ───────────────────────────────────────────────
         let input = 0;
-        if (ctrl.left) input -= 1;
+        if (ctrl.left)  input -= 1;
         if (ctrl.right) input += 1;
 
-        // Smooth steer for tilt
-        steerRef.current = THREE.MathUtils.lerp(steerRef.current, input, dt * 10);
+        // ── 2. Steering & grip ────────────────────────────────────────────
+        const speedFactor = Math.max(0.35, 1.0 - (spd / 160));
+        const steerSpeed  = 12 * speedFactor + 3;
+        steerRef.current  = THREE.MathUtils.lerp(steerRef.current, input, dt * steerSpeed);
 
-        // Move laterally (steering + knockback)
-        let logicX = groupRef.current.position.x - getCurveOffset(0, playerDistRef?.current || 0, track);
+        const hardSteering = Math.abs(steerRef.current) > 0.6 && spd > 35;
+        if (hardSteering) {
+            gripRef.current = Math.max(MIN_GRIP, gripRef.current - GRIP_LOSS_RATE * dt);
+        } else {
+            gripRef.current = Math.min(1.0, gripRef.current + GRIP_GAIN_RATE * dt);
+        }
+        const isDrifting = gripRef.current < DRIFT_THRESHOLD;
 
-        // Apply knockback impulse if present
-        if (knockbackRef && knockbackRef.current !== 0) {
-            logicX += knockbackRef.current;
-            knockbackRef.current = 0; // Consume the impulse
+        // ── 3. Exit boost ─────────────────────────────────────────────────
+        if (!isDrifting && exitBoost.current <= 0 && Math.abs(phys.current.yaw) > 0.05) {
+            exitBoost.current = EXIT_BOOST_TIME;
+        }
+        if (exitBoost.current > 0) {
+            exitBoost.current -= dt;
+            speed.current = Math.min(speed.current * (1 + (EXIT_BOOST_MULT - 1) * dt * 4), 120);
         }
 
-        // Apply steering
-        logicX = THREE.MathUtils.clamp(
-            logicX + input * STEER_SPEED * dt,
-            -MAX_X,
-            MAX_X
-        );
-
-        // Calculate the curvature offset for the car's current position
-        const dist = playerDistRef?.current || 0;
-        const curveOffset = getCurveOffset(0, dist, track); // Car is always at Z=0
-
-        // Apply both logical steering and track curvature to visual position
-        groupRef.current.position.x = logicX + curveOffset;
-
-        // Tilt on steer
-        groupRef.current.rotation.z = -steerRef.current * TILT_AMOUNT;
-
-        // Gentle hover bob
-        const spd = speed.current ?? 30;
-        groupRef.current.position.y = CAR_Y + Math.sin(Date.now() * 0.004) * 0.02 * (spd / 50);
-
-        // Report LOGICAL position for collision detection (ignore curvature offset)
-        if (onPositionChange) onPositionChange(logicX);
-
-        // Exhaust flames
-        const isNitro = nitroActive?.current ?? false;
-        const flicker = Math.random();
-        if (flame1Ref.current) {
-            flame1Ref.current.visible = isNitro;
-            flame1Ref.current.scale.set(0.6 + flicker * 0.4, 0.6 + flicker * 0.4, 1.2 + flicker * 1.5);
+        if (driftStateRef) {
+            driftStateRef.current = {
+                drifting: isDrifting,
+                grip: gripRef.current,
+                exitBoost: exitBoost.current,
+            };
         }
-        if (flame2Ref.current) {
-            flame2Ref.current.visible = isNitro;
-            flame2Ref.current.scale.set(0.4 + flicker * 0.3, 0.4 + flicker * 0.3, 0.8 + flicker * 1.0);
-        }
-        if (flameLightRef.current) {
-            flameLightRef.current.intensity = isNitro ? 8 + flicker * 6 : 0;
-        }
+        if (onDriftChange) onDriftChange(isDrifting, gripRef.current);
+
+        // ── 4. Physics targets ────────────────────────────────────────────
+        const targetYaw  = isDrifting
+            ? -(steerRef.current * MAX_DRIFT_ANGLE * (1.0 - gripRef.current))
+            : 0;
+        const tiltBase   = 0.07 + (1 - gripRef.current) * 0.05;
+        const targetRoll = -steerRef.current * tiltBase;
+        // Lateral force: moderate — strong enough to feel responsive,
+        // low enough that velocity can't escape the wall clamp in one frame
+        const lateralForce = 5.5 * speedFactor * gripRef.current + 2.5;
+
+        // Consume knockback impulse (zero it after reading)
+        const knockbackX = knockbackRef?.current ?? 0;
+        if (knockbackRef) knockbackRef.current = 0;
+
+        // ── 5. Step physics (fixed timestep, NOT frame-rate dependent) ────
+        const result = stepCarPhysics(phys.current, {
+            rawDt: dt,
+            inputX: steerRef.current,  // ← smoothed steer (analogue), NOT raw binary
+            lateralForce,
+            targetYaw,
+            targetRoll,
+            knockbackX,
+            maxX: MAX_X,
+        });
+
+        // ── 6. Sync physics → GLB visual (ground constraint + road curve) ─
+        const curveOffset = getCurveOffset(0, playerDistRef?.current || 0, track);
+
+        //  X: logic X + road curve offset
+        groupRef.current.position.x = result.x + curveOffset;
+        //  Y: ground constraint — COM locked to BODY_Y (no bouncing/sinking)
+        groupRef.current.position.y = result.y;
+        //  Z: fixed at origin (road scrolls past the car)
+        groupRef.current.position.z = 0;
+
+        //  Rotation — ALL three axes explicitly set every frame:
+        groupRef.current.rotation.x = 0;           // pitch ALWAYS 0 (no nose-dive/backflip)
+        groupRef.current.rotation.y = result.yaw;  // yaw   — drift heading
+        groupRef.current.rotation.z = result.roll; // roll  — lean into turns
+
+        if (onPositionChange) onPositionChange(result.x);
     });
 
     return (
-        // Car faces -Z. The "front" is the -Z end of the box.
-        <group ref={groupRef} position={[0, CAR_Y, 0]}>
-            {/* ── Main body ── */}
-            <mesh castShadow>
-                <boxGeometry args={[2.0, 0.5, 4.0]} />
-                <meshStandardMaterial color="#0d0d1a" metalness={0.85} roughness={0.2} />
-            </mesh>
-
-            {/* ── Hood (front = -Z) ── */}
-            <mesh position={[0, 0.05, -0.8]} castShadow>
-                <boxGeometry args={[1.8, 0.2, 1.4]} />
-                <meshStandardMaterial color="#0e0e22" metalness={0.8} roughness={0.25} />
-            </mesh>
-
-            {/* ── Cabin ── */}
-            <mesh position={[0, 0.42, 0.3]} castShadow>
-                <boxGeometry args={[1.4, 0.35, 1.8]} />
-                <meshStandardMaterial color="#111133" metalness={0.6} roughness={0.3} transparent opacity={0.85} />
-            </mesh>
-
-            {/* ── Windshield glow ── */}
-            <mesh position={[0, 0.45, -0.45]}>
-                <boxGeometry args={[1.3, 0.25, 0.08]} />
-                <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.6} transparent opacity={0.35} toneMapped={false} />
-            </mesh>
-
-            {/* ── Underbody neon (cyan) ── */}
-            <mesh position={[0, -0.28, 0]}>
-                <boxGeometry args={[1.8, 0.04, 3.8]} />
-                <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={4} transparent opacity={0.9} toneMapped={false} />
-            </mesh>
-
-            {/* ── Side neon strips (magenta) ── */}
-            <mesh position={[-1.02, -0.05, 0]}>
-                <boxGeometry args={[0.04, 0.1, 3.8]} />
-                <meshStandardMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={4} toneMapped={false} />
-            </mesh>
-            <mesh position={[1.02, -0.05, 0]}>
-                <boxGeometry args={[0.04, 0.1, 3.8]} />
-                <meshStandardMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={4} toneMapped={false} />
-            </mesh>
-
-            {/* ── Front accent line ── */}
-            <mesh position={[0, 0.02, -2.02]}>
-                <boxGeometry args={[1.7, 0.05, 0.05]} />
-                <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={5} toneMapped={false} />
-            </mesh>
-
-            {/* ── Headlights (front = -Z) ── */}
-            {[-0.6, 0.6].map((x, i) => (
-                <mesh key={`hl-${i}`} position={[x, 0.08, -2.02]}>
-                    <boxGeometry args={[0.4, 0.14, 0.06]} />
-                    <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={6} toneMapped={false} />
-                </mesh>
-            ))}
-
-            {/* ── Tail lights (rear = +Z) ── */}
-            {[-0.6, 0.6].map((x, i) => (
-                <mesh key={`tl-${i}`} position={[x, 0.1, 2.02]}>
-                    <boxGeometry args={[0.45, 0.12, 0.06]} />
-                    <meshStandardMaterial color="#ff0033" emissive="#ff0033" emissiveIntensity={5} toneMapped={false} />
-                </mesh>
-            ))}
-
-            {/* ── Rear neon bar ── */}
-            <mesh position={[0, 0.1, 2.02]}>
-                <boxGeometry args={[1.5, 0.04, 0.04]} />
-                <meshStandardMaterial color="#ff0033" emissive="#ff0033" emissiveIntensity={4} toneMapped={false} />
-            </mesh>
-
-            {/* ── Spoiler ── */}
-            {[-0.55, 0.55].map((x, i) => (
-                <mesh key={`sp-${i}`} position={[x, 0.5, 1.6]}>
-                    <boxGeometry args={[0.06, 0.35, 0.06]} />
-                    <meshStandardMaterial color="#0d0d1a" metalness={0.9} roughness={0.2} />
-                </mesh>
-            ))}
-            <mesh position={[0, 0.68, 1.65]}>
-                <boxGeometry args={[1.5, 0.05, 0.35]} />
-                <meshStandardMaterial color="#0d0d1a" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh position={[0, 0.68, 1.82]}>
-                <boxGeometry args={[1.5, 0.03, 0.03]} />
-                <meshStandardMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={3} toneMapped={false} />
-            </mesh>
-
-            {/* ── Actual lights ── */}
-            <pointLight position={[0, 0.3, -3.5]} color="#aaddff" intensity={15} distance={30} />
-            <pointLight position={[0, -0.3, 0]} color="#00ffff" intensity={3} distance={5} />
-            <pointLight position={[0, 0.1, 3]} color="#ff2200" intensity={2} distance={6} />
-
-            {/* ── Exhaust flames (visible during nitro) ── */}
-            <mesh ref={flame1Ref} position={[-0.35, 0.05, 2.6]} visible={false}>
-                <boxGeometry args={[0.3, 0.25, 1]} />
-                <meshStandardMaterial color="#ff6600" emissive="#ff4400" emissiveIntensity={8} toneMapped={false} transparent opacity={0.9} />
-            </mesh>
-            <mesh ref={flame2Ref} position={[0.35, 0.05, 2.6]} visible={false}>
-                <boxGeometry args={[0.3, 0.25, 1]} />
-                <meshStandardMaterial color="#ff8800" emissive="#ff6600" emissiveIntensity={8} toneMapped={false} transparent opacity={0.9} />
-            </mesh>
-            <pointLight ref={flameLightRef} position={[0, 0.1, 3.5]} color="#ff6600" intensity={0} distance={15} />
+        <group ref={groupRef} position={[0, BODY_Y, 0]}>
+            <Suspense fallback={<CarFallback />}>
+                <CarModel modelFile={modelFile} />
+            </Suspense>
         </group>
     );
 }

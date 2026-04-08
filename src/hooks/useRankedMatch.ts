@@ -133,7 +133,7 @@ export function useRankedMatch() {
             const MIN_REQUIRED_BALANCE = entryFeeLamports + 5000000;
 
             if (playerBalance < MIN_REQUIRED_BALANCE) {
-                throw new Error(`Insufficient SOL. You need at least ${MIN_REQUIRED_BALANCE / LAMPORTS_PER_SOL} SOL.`);
+                throw new Error(`Insufficient Neon. You need at least ${MIN_REQUIRED_BALANCE / LAMPORTS_PER_SOL} Neon.`);
             }
 
             const tx = await program.methods

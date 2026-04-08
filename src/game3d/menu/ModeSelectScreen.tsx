@@ -72,7 +72,7 @@ export function ModeSelectScreen({ onSelect, onBack }: Props) {
                         }}>LIVE</span>
                     </h3>
                     <p style={{ color: '#ccc', textAlign: 'center', fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
-                        Stake SOL and race for real rewards. Real-time matchmaking with on-chain escrow.
+                        Stake Neon and race for real rewards. Real-time matchmaking with on-chain escrow.
                     </p>
                     <div style={{
                         display: 'flex', gap: 16, justifyContent: 'center',

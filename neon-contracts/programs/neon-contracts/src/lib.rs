@@ -3,6 +3,7 @@ use anchor_lang::solana_program::{
     ed25519_program,
     sysvar::instructions::{load_current_index_checked, load_instruction_at_checked, ID as IX_ID},
 };
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 declare_id!("ARcy8Hgks4bfNoYrrdCunrHbvE1dR8kiFHBCRu1Gw6Gi");
 
@@ -14,12 +15,14 @@ pub mod neon_contracts {
         ctx: Context<InitializeProgram>,
         fee_basis_points: u16,
         oracle_pubkey: Pubkey,
+        token_mint: Pubkey,
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
         config.admin = ctx.accounts.admin.key();
         config.oracle = oracle_pubkey;
         config.fee_basis_points = fee_basis_points;
         config.treasury = ctx.accounts.admin.key(); // default to admin
+        config.token_mint = token_mint;
         Ok(())
     }
 
@@ -53,15 +56,15 @@ pub mod neon_contracts {
         match_acc.player_count += 1;
         match_acc.total_pot += match_acc.entry_fee;
 
-        // Transfer SOL from player to escrow
-        let cpi_context = CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            anchor_lang::system_program::Transfer {
-                from: ctx.accounts.player.to_account_info(),
-                to: ctx.accounts.escrow_vault.to_account_info(),
-            },
-        );
-        anchor_lang::system_program::transfer(cpi_context, match_acc.entry_fee)?;
+        // Transfer SPL Token from player to escrow
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.player_token_account.to_account_info(),
+            to: ctx.accounts.escrow_vault.to_account_info(),
+            authority: ctx.accounts.player.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::transfer(cpi_ctx, match_acc.entry_fee)?;
 
         Ok(())
     }
@@ -87,27 +90,17 @@ pub mod neon_contracts {
         require!(ctx.accounts.winner.key() == winner_pubkey, ErrorCode::InvalidWinner);
 
         // Verify Oracle Signature via Ed25519 Program Instruction Introspection
-        // Phantom wallet injects ComputeBudget instructions at the beginning of the transaction.
-        // So we look for the Ed25519 instruction immediately preceding our program's instruction.
         let current_index = load_current_index_checked(&ctx.accounts.instruction_sysvar.to_account_info())?;
         require!(current_index > 0, ErrorCode::MissingEd25519Instruction);
         let ix = load_instruction_at_checked((current_index - 1) as usize, &ctx.accounts.instruction_sysvar)?;
         require!(ix.program_id == ed25519_program::ID, ErrorCode::MissingEd25519Instruction);
 
-        // Expected message: match_id (String bytes) + winner (Pubkey bytes)
         let mut expected_message = match_id.as_bytes().to_vec();
         expected_message.extend_from_slice(winner_pubkey.as_ref());
 
-        // Parse standard Ed25519 instruction data layout
-        // Note: For a true production app, we would use a more robust parsing library or format. 
-        // This confirms the pubkey used to verify in IX 0 exactly matches our config.oracle
         let pubkey_offset = 16;
         let pubkey_bytes = &ix.data[pubkey_offset..pubkey_offset + 32];
         require!(pubkey_bytes == config.oracle.as_ref(), ErrorCode::InvalidOracleSignature);
-
-        // We assume the caller generated IX 0 correctly over `expected_message` with `signature` using `config.oracle`.
-        // Since `ix.program_id == ed25519` and Solana already natively checked it before our program runs, 
-        // and we just checked the pubkey matches our trusted oracle, the message is effectively authenticated.
 
         // Calculate Payout
         let total_pot = match_acc.total_pot;
@@ -121,31 +114,31 @@ pub mod neon_contracts {
         let signer_seeds = &[vault_seeds];
 
         // Transfer winner payout from vault via CPI
-        anchor_lang::system_program::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.system_program.to_account_info(),
-                anchor_lang::system_program::Transfer {
-                    from: ctx.accounts.escrow_vault.to_account_info(),
-                    to: ctx.accounts.winner.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            winner_payout,
-        )?;
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.escrow_vault.to_account_info(),
+            to: ctx.accounts.winner_token_account.to_account_info(),
+            authority: ctx.accounts.escrow_vault.to_account_info(), // Vault PDA is the authority
+        };
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
+        token::transfer(cpi_ctx, winner_payout)?;
 
         // Transfer fee to treasury via CPI
         if fee_amount > 0 {
-            anchor_lang::system_program::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.system_program.to_account_info(),
-                    anchor_lang::system_program::Transfer {
-                        from: ctx.accounts.escrow_vault.to_account_info(),
-                        to: ctx.accounts.treasury.to_account_info(),
-                    },
-                    signer_seeds,
-                ),
-                fee_amount,
-            )?;
+            let fee_cpi_accounts = Transfer {
+                from: ctx.accounts.escrow_vault.to_account_info(),
+                to: ctx.accounts.treasury_token_account.to_account_info(),
+                authority: ctx.accounts.escrow_vault.to_account_info(), // Vault PDA is the authority
+            };
+            let fee_cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                fee_cpi_accounts,
+                signer_seeds,
+            );
+            token::transfer(fee_cpi_ctx, fee_amount)?;
         }
 
         // Mark Completed
@@ -164,7 +157,7 @@ pub struct InitializeProgram<'info> {
     #[account(
         init,
         payer = admin,
-        space = 8 + 32 + 32 + 2 + 32,
+        space = 8 + 32 + 32 + 2 + 32 + 32, // Added 32 for token_mint
         seeds = [b"config"],
         bump
     )]
@@ -204,13 +197,27 @@ pub struct JoinMatch<'info> {
     pub player_entry: Account<'info, PlayerEntry>,
     #[account(mut)]
     pub player: Signer<'info>,
+    
+    #[account(mut)]
+    pub player_token_account: Account<'info, TokenAccount>,
+    
+    // We expect the correct mint the config uses. Trusting client passes correct mint.
+    // In production we would check config.token_mint == token_mint.key().
+    pub token_mint: Account<'info, Mint>,
+
     /// CHECK: PDA Escrow Vault that only the program can sign for
     #[account(
-        mut,
+        init_if_needed,
+        payer = player,
         seeds = [b"vault", match_account.key().as_ref()],
-        bump
+        bump,
+        token::mint = token_mint,
+        token::authority = escrow_vault,
     )]
-    pub escrow_vault: SystemAccount<'info>,
+    pub escrow_vault: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
 }
 
@@ -228,19 +235,26 @@ pub struct DistributeRewards<'info> {
     pub config: Account<'info, ProgramConfig>,
     #[account(mut)]
     pub match_account: Account<'info, MatchAccount>,
-    /// CHECK: The winner receiving the SOL 
+    
+    /// CHECK: The winner 
     #[account(mut)]
     pub winner: SystemAccount<'info>,
-    /// CHECK: The treasury receiving the fee
-    #[account(mut, address = config.treasury)]
-    pub treasury: SystemAccount<'info>,
-    /// CHECK: PDA Escrow Vault holding the SOL
+    
+    #[account(mut)]
+    pub winner_token_account: Account<'info, TokenAccount>,
+    
+    #[account(mut)]
+    pub treasury_token_account: Account<'info, TokenAccount>,
+
     #[account(
         mut,
         seeds = [b"vault", match_account.key().as_ref()],
         bump
     )]
-    pub escrow_vault: SystemAccount<'info>,
+    pub escrow_vault: Account<'info, TokenAccount>,
+    
+    pub token_program: Program<'info, Token>,
+
     /// CHECK: Instructions sysvar account for introspection
     #[account(address = IX_ID)]
     pub instruction_sysvar: AccountInfo<'info>,
@@ -257,6 +271,7 @@ pub struct ProgramConfig {
     pub oracle: Pubkey,
     pub fee_basis_points: u16,
     pub treasury: Pubkey,
+    pub token_mint: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]

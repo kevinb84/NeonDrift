@@ -101,7 +101,7 @@ export const MatchHub = () => {
                 </h1>
                 <p className="relative text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-8">
                     High-speed futuristic racing on the Solana blockchain. 
-                    Stake SOL, challenge opponents, and dominate the global leaderboards.
+                    Stake Neon, challenge opponents, and dominate the global leaderboards.
                 </p>
                 
                 <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -161,7 +161,7 @@ export const MatchHub = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-cyan-400 font-bold">{m.entry_fee} SOL 💰</div>
+                                            <div className="text-cyan-400 font-bold">{m.entry_fee} Neon 💰</div>
                                         </div>
                                     </div>
                                 ))}
@@ -206,7 +206,7 @@ export const MatchHub = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-green-400 font-extrabold">+{w.entry_fee * 2} SOL</div>
+                                            <div className="text-green-400 font-extrabold">+{w.entry_fee * 2} Neon</div>
                                             <div className="text-xs text-slate-500">Won</div>
                                         </div>
                                     </div>

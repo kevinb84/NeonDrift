@@ -1,2 +1,1 @@
-// Replace with the actual address after deploying via 'create-token' function
-export const NDRIFT_TOKEN_ADDRESS = "11111111111111111111111111111111"; 
+export const NDRIFT_TOKEN_ADDRESS = "DK4GxSoKQotFHTiq8zu8UWqphr5T5SqXKkTpHWdGBAGS"; 

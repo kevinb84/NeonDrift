@@ -2,8 +2,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState, useCallback } from 'react';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-// TODO: Replace with actual NDRIFT Mint Address once deployed
-const NDRIFT_MINT_ADDRESS = '11111111111111111111111111111111';
+const NDRIFT_MINT_ADDRESS = 'DK4GxSoKQotFHTiq8zu8UWqphr5T5SqXKkTpHWdGBAGS';
 
 export const useTokenBalance = () => {
     const { connection } = useConnection();

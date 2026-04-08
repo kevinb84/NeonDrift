@@ -15,12 +15,13 @@ export interface MatchConfig {
 export interface CarConfig {
     id: string;
     name: string;
+    modelFile: string;   // filename inside /public/models/
     color: string;
     glowColor: string;
+    rarity: 'common' | 'rare' | 'legendary';
     topSpeed: number;    // 1-10
     handling: number;    // 1-10
     nitro: number;       // 1-10
-    /** Multiplier applied to BASE_SPEED/MAX_SPEED in GameScene */
     speedMult: number;
     steerMult: number;
 }
@@ -41,45 +42,22 @@ export interface TrackConfig {
     lighting: {
         hemisphere: [string, string, number];
         ambient: [string, number];
-        directional1: [number, number, number, number, string]; // x, y, z, intensity, color
+        directional1: [number, number, number, number, string];
         directional2: [number, number, number, number, string];
     };
 }
 
 export const CARS: CarConfig[] = [
-    {
-        id: 'phantom',
-        name: 'PHANTOM',
-        color: '#0d0d1a',
-        glowColor: '#00ffff',
-        topSpeed: 7,
-        handling: 8,
-        nitro: 7,
-        speedMult: 1.0,
-        steerMult: 1.0,
-    },
-    {
-        id: 'spectre',
-        name: 'SPECTRE',
-        color: '#1a001a',
-        glowColor: '#ff00ff',
-        topSpeed: 9,
-        handling: 5,
-        nitro: 9,
-        speedMult: 1.2,
-        steerMult: 0.85,
-    },
-    {
-        id: 'titan',
-        name: 'TITAN',
-        color: '#0a0a00',
-        glowColor: '#ffaa00',
-        topSpeed: 5,
-        handling: 10,
-        nitro: 5,
-        speedMult: 0.85,
-        steerMult: 1.2,
-    },
+    { id: 'car-01', name: 'PHANTOM',  modelFile: 'car-01.glb', color: '#0d0d1a', glowColor: '#00ffff', rarity: 'common',    topSpeed: 7,  handling: 8,  nitro: 7,  speedMult: 1.0,  steerMult: 1.0  },
+    { id: 'car-02', name: 'SPECTRE',  modelFile: 'car-02.glb', color: '#1a001a', glowColor: '#ff00ff', rarity: 'common',    topSpeed: 9,  handling: 5,  nitro: 9,  speedMult: 1.2,  steerMult: 0.85 },
+    { id: 'car-03', name: 'TITAN',    modelFile: 'car-03.glb', color: '#0a0a00', glowColor: '#ffaa00', rarity: 'common',    topSpeed: 5,  handling: 10, nitro: 5,  speedMult: 0.85, steerMult: 1.2  },
+    { id: 'car-04', name: 'VORTEX',   modelFile: 'car-04.glb', color: '#000d1a', glowColor: '#0088ff', rarity: 'rare',      topSpeed: 8,  handling: 7,  nitro: 8,  speedMult: 1.1,  steerMult: 1.05 },
+    { id: 'car-05', name: 'NOVA',     modelFile: 'car-05.glb', color: '#1a0a00', glowColor: '#ff6600', rarity: 'rare',      topSpeed: 10, handling: 4,  nitro: 6,  speedMult: 1.3,  steerMult: 0.75 },
+    { id: 'car-06', name: 'SHADOW',   modelFile: 'car-06.glb', color: '#0d0d0d', glowColor: '#ff0044', rarity: 'rare',      topSpeed: 6,  handling: 9,  nitro: 8,  speedMult: 0.95, steerMult: 1.15 },
+    { id: 'car-07', name: 'PULSE',    modelFile: 'car-07.glb', color: '#000a1a', glowColor: '#00ff88', rarity: 'rare',      topSpeed: 8,  handling: 8,  nitro: 7,  speedMult: 1.05, steerMult: 1.0  },
+    { id: 'car-08', name: 'WRAITH',   modelFile: 'car-08.glb', color: '#0a001a', glowColor: '#aa00ff', rarity: 'legendary', topSpeed: 9,  handling: 9,  nitro: 10, speedMult: 1.15, steerMult: 1.1  },
+    { id: 'car-09', name: 'APEX',     modelFile: 'car-09.glb', color: '#1a1a00', glowColor: '#ffff00', rarity: 'legendary', topSpeed: 10, handling: 7,  nitro: 9,  speedMult: 1.25, steerMult: 0.95 },
+    { id: 'car-10', name: 'NEMESIS',  modelFile: 'car-10.glb', color: '#1a0000', glowColor: '#ff2200', rarity: 'legendary', topSpeed: 10, handling: 10, nitro: 10, speedMult: 1.35, steerMult: 1.2  },
 ];
 
 export const TRACKS: TrackConfig[] = [
@@ -91,7 +69,7 @@ export const TRACKS: TrackConfig[] = [
         fogColor: '#150e2a',
         bgColor: '#0a0818',
         accentColor: '#00ffff',
-        curvature: { amplitude: 30, frequency: 0.0005 }, // Moderate curves
+        curvature: { amplitude: 15, frequency: 0.0002 },
         aiDifficultyScale: 1.0,
         lighting: {
             hemisphere: ['#8866dd', '#2a2a44', 1.8],
@@ -108,12 +86,12 @@ export const TRACKS: TrackConfig[] = [
         fogColor: '#2a1a0e',
         bgColor: '#1a0f08',
         accentColor: '#ffaa00',
-        curvature: { amplitude: 15, frequency: 0.0002 }, // Very long straights
-        aiDifficultyScale: 0.85, // Easier AI
+        curvature: { amplitude: 15, frequency: 0.0002 },
+        aiDifficultyScale: 0.85,
         lighting: {
             hemisphere: ['#ff8844', '#2a1100', 1.5],
             ambient: ['#aa5522', 1.0],
-            directional1: [15, 30, 40, 2.0, '#ffaa44'], // Sunset-like highlight
+            directional1: [15, 30, 40, 2.0, '#ffaa44'],
             directional2: [-20, 10, -50, 0.5, '#aa3300'],
         }
     },
@@ -125,21 +103,21 @@ export const TRACKS: TrackConfig[] = [
         fogColor: '#050505',
         bgColor: '#010101',
         accentColor: '#ff00ff',
-        curvature: { amplitude: 50, frequency: 0.001 }, // Sharp, fast curves
-        aiDifficultyScale: 1.15, // Harder AI
+        curvature: { amplitude: 15, frequency: 0.0002 },
+        aiDifficultyScale: 1.15,
         lighting: {
-            hemisphere: ['#220044', '#000000', 0.5], // Very dark ambient
+            hemisphere: ['#220044', '#000000', 0.5],
             ambient: ['#110022', 0.3],
-            directional1: [0, 10, 10, 0.5, '#ff00ff'], // Mostly rely on emissive lights in the tunnel
+            directional1: [0, 10, 10, 0.5, '#ff00ff'],
             directional2: [0, 5, -20, 0.5, '#00ffff'],
         }
     },
 ];
 
 export const DIFFICULTY_CONFIG: Record<Difficulty, { aiSpeedMult: number; label: string; desc: string; color: string }> = {
-    easy: { aiSpeedMult: 0.75, label: 'EASY', color: '#00ff88', desc: 'AI opponents run at 75% speed. Great for learning the track.' },
-    medium: { aiSpeedMult: 1.0, label: 'MEDIUM', color: '#ffaa00', desc: 'Balanced competition. AI matches your base pace closely.' },
-    hard: { aiSpeedMult: 1.3, label: 'HARD', color: '#ff3333', desc: 'Aggressive AI. You\'ll need every drop of nitro to win.' },
+    easy:   { aiSpeedMult: 0.75, label: 'EASY',   color: '#00ff88', desc: 'AI opponents run at 75% speed. Great for learning the track.' },
+    medium: { aiSpeedMult: 1.0,  label: 'MEDIUM', color: '#ffaa00', desc: 'Balanced competition. AI matches your base pace closely.' },
+    hard:   { aiSpeedMult: 1.3,  label: 'HARD',   color: '#ff3333', desc: "Aggressive AI. You'll need every drop of nitro to win." },
 };
 
 export interface GameFlowState {
@@ -161,18 +139,14 @@ export function useGameFlow() {
         matchConfig: null,
     });
 
-    const goToCarSelect = useCallback(() => setState(s => ({ ...s, phase: 'car-select' })), []);
-    const goToTitle = useCallback(() => setState(s => ({ ...s, phase: 'title', raceStats: null, matchConfig: null })), []);
-    const goToModeSelect = useCallback(() => setState(s => ({ ...s, phase: 'mode-select' })), []);
+    const goToCarSelect   = useCallback(() => setState(s => ({ ...s, phase: 'car-select' })), []);
+    const goToTitle       = useCallback(() => setState(s => ({ ...s, phase: 'title', raceStats: null, matchConfig: null })), []);
+    const goToModeSelect  = useCallback(() => setState(s => ({ ...s, phase: 'mode-select' })), []);
     const goToRankedLobby = useCallback(() => setState(s => ({ ...s, phase: 'ranked-lobby' })), []);
 
     const selectMode = useCallback((type: MatchType, stake: number = 0) => {
         const seed = Math.floor(Math.random() * 1000000);
-        setState(s => ({
-            ...s,
-            phase: 'car-select',
-            matchConfig: { type, stake, seed }
-        }));
+        setState(s => ({ ...s, phase: 'car-select', matchConfig: { type, stake, seed } }));
     }, []);
 
     const startRankedMatch = useCallback((matchId: string, stake: number = 0) => {
@@ -184,22 +158,17 @@ export function useGameFlow() {
             }
             seed = Math.abs(hash);
         } catch(e) {}
-        
-        setState(s => ({
-            ...s,
-            phase: 'car-select',
-            matchConfig: { type: 'ranked', stake, seed, matchId }
-        }));
+        setState(s => ({ ...s, phase: 'car-select', matchConfig: { type: 'ranked', stake, seed, matchId } }));
     }, []);
 
-    const selectCar = useCallback((car: CarConfig) => setState(s => ({ ...s, selectedCar: car })), []);
+    const selectCar       = useCallback((car: CarConfig) => setState(s => ({ ...s, selectedCar: car })), []);
     const goToTrackSelect = useCallback(() => setState(s => ({ ...s, phase: 'track-select' })), []);
-    const selectTrack = useCallback((track: TrackConfig) => setState(s => ({ ...s, selectedTrack: track })), []);
-    const goToDifficulty = useCallback(() => setState(s => ({ ...s, phase: 'difficulty' })), []);
-    const selectDifficulty = useCallback((d: Difficulty) => setState(s => ({ ...s, difficulty: d })), []);
-    const startRace = useCallback(() => setState(s => ({ ...s, phase: 'racing' })), []);
-    const restartRace = useCallback(() => setState(s => ({ ...s, phase: 'racing', raceStats: null })), []);
-    const finishRace = useCallback((stats: { position: number; raceTime: number; bestLapTime: number; previousBest: number | null; isNewPb: boolean }) =>
+    const selectTrack     = useCallback((track: TrackConfig) => setState(s => ({ ...s, selectedTrack: track })), []);
+    const goToDifficulty  = useCallback(() => setState(s => ({ ...s, phase: 'difficulty' })), []);
+    const selectDifficulty= useCallback((d: Difficulty) => setState(s => ({ ...s, difficulty: d })), []);
+    const startRace       = useCallback(() => setState(s => ({ ...s, phase: 'racing' })), []);
+    const restartRace     = useCallback(() => setState(s => ({ ...s, phase: 'racing', raceStats: null })), []);
+    const finishRace      = useCallback((stats: { position: number; raceTime: number; bestLapTime: number; previousBest: number | null; isNewPb: boolean }) =>
         setState(s => ({ ...s, phase: 'finished', raceStats: stats })), []);
 
     return {
@@ -220,4 +189,3 @@ export function useGameFlow() {
         finishRace,
     };
 }
-

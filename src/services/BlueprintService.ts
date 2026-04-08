@@ -1,4 +1,4 @@
-import { PublicKey, Transaction, VersionedTransaction, Connection } from '@solana/web3.js';
+import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { insforge } from '../lib/insforge';
 import bs58 from 'bs58';
 
@@ -7,7 +7,8 @@ import bs58 from 'bs58';
 // When IS_MAINNET = false, all calls return mock data for UI testing.
 export const IS_MAINNET = true;
 
-const BAGS_API_BASE = 'https://public-api-v2.bags.fm/api/v1';
+// Use Vite proxy locally to bypass Bags API strict CORS on step 2 and Deno SNI bug
+const BAGS_API_BASE = '/bags-api';
 const BAGS_API_KEY = import.meta.env.VITE_BAGS_API_KEY || '';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -235,61 +236,126 @@ export class BagsBlueprintService implements BlueprintService {
             return { success: true, mint: fakeMint };
         }
 
-        // ── Real Bags SDK Flow (mainnet) ─────────────────────────
+        // ── Direct Browser Execution (Native fetch) ─────────────────────────
         try {
-            const { BagsSDK } = await import('@bagsfm/bags-sdk');
-            const connection = new Connection(import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
-            const sdk = new BagsSDK(BAGS_API_KEY, connection, 'processed');
-
-            // Step 1: Create token metadata
-            console.log('[Bags] Step 1: Creating token metadata...');
-            const tokenInfo = await sdk.tokenLaunch.createTokenInfoAndMetadata({
-                imageUrl: image,
-                name,
-                description,
-                symbol: symbol.toUpperCase().replace('$', ''),
-                twitter: socials.twitter,
-                website: socials.website,
-                telegram: socials.telegram,
-            });
-
-            console.log('[Bags] Token mint:', tokenInfo.tokenMint);
-
-            // Step 2: Create fee share config (creator gets 100%)
-            console.log('[Bags] Step 2: Creating fee share config...');
-            const tokenMint = new PublicKey(tokenInfo.tokenMint);
-            const configResult = await sdk.config.createBagsFeeShareConfig({
-                payer: creator,
-                baseMint: tokenMint,
-                feeClaimers: [{ user: creator, userBps: 10000 }], // 100% to creator
-            });
-
-            // Sign and send config transactions
-            for (const tx of configResult.transactions || []) {
-                await _signAndSend(tx);
+            console.log('[Bags] Starting Token Launch natively in browser...');
+            
+            if (!BAGS_API_KEY) {
+                throw new Error("Missing VITE_BAGS_API_KEY in environment");
             }
 
-            // Step 3: Create launch transaction
-            console.log('[Bags] Step 3: Creating launch transaction...');
-            const launchTx = await sdk.tokenLaunch.createLaunchTransaction({
-                metadataUrl: tokenInfo.tokenMetadata,
-                tokenMint,
-                launchWallet: creator,
-                initialBuyLamports: initialBuyLamports,
-                configKey: configResult.meteoraConfigKey,
+            // --- STEP 1: Create Token Info ---
+            console.log(`[CreateToken] Step 1: Info for ${name} by ${creator.toBase58()}`);
+            
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("symbol", symbol.toUpperCase().replace('$', ''));
+            formData.append("imageUrl", image);
+            formData.append("description", description || `Powered by Neon Drift: ${name}`);
+            if(socials?.twitter) formData.append("twitter", socials.twitter);
+            if(socials?.website) formData.append("website", socials.website);
+            if(socials?.telegram) formData.append("telegram", socials.telegram);
+
+            // Note: Native browser fetch AUTOMATICALLY sets Content-Type boundary
+            const step1Response = await fetch(`${BAGS_API_BASE}/token-launch/create-token-info`, {
+                method: "POST",
+                headers: { "x-api-key": BAGS_API_KEY },
+                body: formData,
             });
 
-            // Step 4: Sign and broadcast
-            console.log('[Bags] Step 4: Signing and broadcasting...');
-            const signature = await _signAndSend(launchTx);
+            if (!step1Response.ok) {
+                const errText = await step1Response.text();
+                throw new Error(`Step 1 Failed: ${step1Response.status} - ${errText}`);
+            }
 
-            console.log('[Bags] 🎉 Token launched! Mint:', tokenInfo.tokenMint);
-            console.log(`[Bags] View at: https://bags.fm/${tokenInfo.tokenMint}`);
+            const step1Data = await step1Response.json();
+            if (!step1Data.success) {
+                throw new Error(step1Data.error || `Step 1 Logic Failed`);
+            }
+            
+            const { tokenMint, tokenMetadata } = step1Data.response;
+
+            // --- STEP 2: Fee Share Config ---
+            console.log(`[CreateToken] Step 2: Fee config for ${tokenMint}`);
+            const feePayload = {
+                payer: creator.toBase58(),
+                baseMint: tokenMint,
+                claimersArray: [creator.toBase58()], 
+                basisPointsArray: [10000] // 100% to creator
+            };
+
+            const step2Response = await fetch(`${BAGS_API_BASE}/fee-share/config`, {
+                method: "POST",
+                headers: { "x-api-key": BAGS_API_KEY, "Content-Type": "application/json" },
+                body: JSON.stringify(feePayload),
+            });
+
+            if (!step2Response.ok) {
+                const errText = await step2Response.text();
+                throw new Error(`Step 2 Failed: ${step2Response.status} - ${errText}`);
+            }
+
+            const step2Data = await step2Response.json();
+            if (!step2Data.success) {
+                throw new Error(step2Data.error || `Step 2 Logic Failed`);
+            }
+            
+            console.log("=== STEP 2 SUCCESS DATA ===", step2Data.response);
+            const configTransactions = step2Data.response.transactions || [];
+            
+            // Bags V2 renamed 'meteoraConfigKey' internally to just 'configKey' or 'publicKey'
+            const configKey = step2Data.response.configKey || step2Data.response.meteoraConfigKey || step2Data.response.publicKey;
+
+            // --- STEP 3: Launch Transaction ---
+            console.log(`[CreateToken] Step 3: Launch transaction`);
+            const launchPayload = {
+                tokenMint: tokenMint,
+                ipfs: tokenMetadata,
+                wallet: creator.toBase58(),
+                initialBuyLamports: initialBuyLamports || 0,
+                configKey: configKey,
+            };
+
+            const step3Response = await fetch(`${BAGS_API_BASE}/token-launch/create-launch-transaction`, {
+                method: "POST",
+                headers: { "x-api-key": BAGS_API_KEY, "Content-Type": "application/json" },
+                body: JSON.stringify(launchPayload),
+            });
+
+            if (!step3Response.ok) {
+                const errText = await step3Response.text();
+                throw new Error(`Step 3 Failed: ${step3Response.status} - ${errText}`);
+            }
+
+            const step3Data = await step3Response.json();
+            if (!step3Data.success) {
+                throw new Error(step3Data.error || `Step 3 Logic Failed`);
+            }
+            const launchTx = step3Data.response; 
+
+            // --- STEP 4: SIGN AND SEND ---
+            const allTransactions = [...configTransactions, launchTx];
+            console.log(`[Bags] Server returned ${allTransactions.length} logic steps. Signing...`);
+            
+            let lastSignature = '';
+            for (const txBase58 of allTransactions) {
+                let txToSign;
+                try {
+                    const txData = bs58.decode(txBase58);
+                    txToSign = VersionedTransaction.deserialize(txData);
+                } catch {
+                    txToSign = Transaction.from(bs58.decode(txBase58));
+                }
+                lastSignature = await _signAndSend(txToSign);
+            }
+
+            console.log('[Bags] 🎉 Token launched! Mint:', tokenMint);
+            console.log(`[Bags] View at: https://bags.fm/${tokenMint}`);
 
             return {
                 success: true,
-                mint: tokenInfo.tokenMint,
-                transaction: signature,
+                mint: tokenMint,
+                transaction: lastSignature, 
             };
         } catch (error: any) {
             console.error('[Bags] Token launch failed:', error);

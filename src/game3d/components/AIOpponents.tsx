@@ -1,17 +1,29 @@
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { ROAD_WIDTH, LANE_COUNT, LANE_WIDTH } from './Road';
+import { getCurveOffset } from '../utils/curveOffset';
+import { BODY_Y } from '../physics/vehiclePhysics';
 
 const AI_COUNT = 4;
-const LAP_DISTANCE = 2000; // Must match GameScene.tsx constant
+const LAP_DISTANCE = 2000;
 
-const PALETTES = [
-    { body: '#1a0808', accent: '#ff3333', glow: '#ff0000' },
-    { body: '#081a08', accent: '#33ff66', glow: '#00ff44' },
-    { body: '#1a1a08', accent: '#ffaa00', glow: '#ff8800' },
-    { body: '#10081a', accent: '#cc33ff', glow: '#aa00ff' },
+// One GLB, shared — already in memory when player car uses car-01.glb
+const SHARED_GLB = 'car-01.glb';
+useGLTF.preload(`/models/${SHARED_GLB}`);
+
+// Unique RGB tint per car slot
+const AI_TINTS: [number, number, number][] = [
+    [0.7, 0.0, 1.0],  // purple
+    [1.0, 0.8, 0.0],  // yellow
+    [1.0, 0.1, 0.05], // red
+    [0.0, 1.0, 0.4],  // green
 ];
+
+const AI_LATERAL_SPEED = 4.5;
+const AI_MIN_X = -ROAD_WIDTH / 2 + 2.0;
+const AI_MAX_X =  ROAD_WIDTH / 2 - 2.0;
 
 interface AICar {
     x: number;
@@ -21,8 +33,10 @@ interface AICar {
     maxSpeed: number;
     tilt: number;
     idx: number;
-    /** Cumulative race distance for position ranking */
     totalDist: number;
+    laneChangeCooldown: number;
+    speedTarget: number;
+    speedTargetCooldown: number;
 }
 
 interface Props {
@@ -36,153 +50,191 @@ interface Props {
     randomFn: () => number;
 }
 
-import { getCurveOffset } from '../utils/curveOffset';
+/** Clone the shared scene once per car index, apply a unique material tint */
+function cloneWithTint(scene: THREE.Group, tint: [number, number, number]): THREE.Group {
+    const c = scene.clone(true);
 
-/** AI opponent cars — -Z is forward, same as player */
-export function AIOpponents({ playerSpeed, aiSpeedMult = 1, onPositionUpdate, onDetailedUpdate, playerDistRef, track, aiKnockbackRef, randomFn }: Props) {
+    // Orient — same bake as player CarModel (GLB exported facing +X → rotate to -Z)
+    c.rotation.set(0, Math.PI / 2, 0);
+    c.updateMatrixWorld(true);
+
+    const box = new THREE.Box3().setFromObject(c);
+    const size = box.getSize(new THREE.Vector3());
+    const scale = 3.8 / Math.max(size.x, size.y, size.z);
+    c.scale.setScalar(scale);
+
+    c.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3().setFromObject(c);
+    const center = scaledBox.getCenter(new THREE.Vector3());
+    c.position.set(-center.x, -scaledBox.min.y, -center.z);
+
+    // Clone + tint each mesh material so cars look distinct
+    c.traverse(child => {
+        const mesh = child as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.castShadow = true;
+
+        const mat = (mesh.material as THREE.MeshStandardMaterial).clone();
+        const col = mat.color;
+        col.setRGB(
+            Math.min(1, col.r * 0.35 + tint[0] * 0.65),
+            Math.min(1, col.g * 0.35 + tint[1] * 0.65),
+            Math.min(1, col.b * 0.35 + tint[2] * 0.65),
+        );
+        if (mat.emissive) {
+            mat.emissive.setRGB(tint[0] * 0.35, tint[1] * 0.35, tint[2] * 0.35);
+            mat.emissiveIntensity = 0.7;
+        }
+        mesh.material = mat;
+    });
+
+    return c as unknown as THREE.Group;
+}
+
+// ── Per-car rendered group — own ref + own useFrame ──────────────────
+function AISingleCar({
+    carState,
+    cloned,
+    playerDistRef,
+    track,
+}: {
+    carState: AICar;
+    cloned: THREE.Group;
+    playerDistRef?: React.MutableRefObject<number>;
+    track?: import('../menu/useGameFlow').TrackConfig;
+}) {
     const groupRef = useRef<THREE.Group>(null);
-    const carsRef = useRef<AICar[]>([]);
-    const initDone = useRef(false);
 
-    // One-time init
-    if (!initDone.current) {
-        for (let i = 0; i < AI_COUNT; i++) {
-            const lane = i % LANE_COUNT;
-            const x = -ROAD_WIDTH / 2 + LANE_WIDTH / 2 + lane * LANE_WIDTH;
-            carsRef.current.push({
-                x,
-                z: -(15 + i * 14),
-                lane,
-                speed: 26 + randomFn() * 8,
-                maxSpeed: 30 + randomFn() * 15,
-                tilt: 0,
-                idx: i,
-                // Start with some distance based on initial z offset (they start ahead)
-                totalDist: 15 + i * 14,
-            });
-        }
-        initDone.current = true;
-    }
-
-    // Shared geometry
-    const bodyGeo = useMemo(() => new THREE.BoxGeometry(1.8, 0.45, 3.5), []);
-    const cabinGeo = useMemo(() => new THREE.BoxGeometry(1.2, 0.3, 1.4), []);
-    const underGeo = useMemo(() => new THREE.BoxGeometry(1.6, 0.04, 3.3), []);
-    const sideGeo = useMemo(() => new THREE.BoxGeometry(0.04, 0.08, 3.3), []);
-    const lightGeo = useMemo(() => new THREE.BoxGeometry(0.35, 0.1, 0.06), []);
-    const tailGeo = useMemo(() => new THREE.BoxGeometry(0.3, 0.08, 0.06), []);
-
-    useFrame((_, dt) => {
-        const pSpeed = playerSpeed.current ?? 30;
+    useFrame(() => {
+        const g = groupRef.current;
+        if (!g) return;
         const dist = playerDistRef?.current || 0;
-        const cars = carsRef.current;
-
-        cars.forEach((c, i) => {
-            // Rubberbanding — based on relative z position
-            const relZ = c.z; // c.z < 0 = ahead of player (who is at z=0)
-
-            let target = c.maxSpeed;
-            if (relZ < -50) target = pSpeed * 0.7 * aiSpeedMult;       // Too far ahead → slow
-            else if (relZ < -25) target = pSpeed * 0.85 * aiSpeedMult;
-            else if (relZ > 40) target = pSpeed * 1.4 * aiSpeedMult;  // Too far behind → speed up
-            else if (relZ > 15) target = pSpeed * 1.2 * aiSpeedMult;
-            else target = pSpeed * (0.92 + randomFn() * 0.12) * aiSpeedMult;
-
-            c.speed = THREE.MathUtils.lerp(c.speed, target, dt * 2);
-
-            // Accumulate actual distance driven per frame
-            c.totalDist += c.speed * dt;
-
-            // Move relative to player (negative = ahead)
-            c.z += (pSpeed - c.speed) * dt;
-
-            // Wrap the visual position
-            if (c.z > 70) c.z = -(45 + randomFn() * 25);
-            if (c.z < -80) c.z = 40 + randomFn() * 25;
-
-            // Random lane switch
-            if (randomFn() < 0.004) {
-                c.lane = Math.floor(randomFn() * LANE_COUNT);
-            }
-
-            // Apply knockback impulse
-            if (aiKnockbackRef?.current && aiKnockbackRef.current[i] !== undefined) {
-                c.x += aiKnockbackRef.current[i];
-                delete aiKnockbackRef.current[i]; // consume
-            }
-
-            // Steer to target lane
-            const targetX = -ROAD_WIDTH / 2 + LANE_WIDTH / 2 + c.lane * LANE_WIDTH;
-            const dx = targetX - c.x;
-            if (Math.abs(dx) > 0.15) {
-                c.x += Math.sign(dx) * 5 * dt;
-                c.tilt = THREE.MathUtils.lerp(c.tilt, Math.sign(dx) * 0.1, dt * 6);
-            } else {
-                c.x = targetX;
-                c.tilt = THREE.MathUtils.lerp(c.tilt, 0, dt * 6);
-            }
-
-            // Keep within road bounds
-            c.x = THREE.MathUtils.clamp(c.x, -ROAD_WIDTH / 2 + 1.5, ROAD_WIDTH / 2 - 1.5);
-
-            // Update visual position
-            if (groupRef.current) {
-                const child = groupRef.current.children[i];
-                if (child) {
-                    const curve = getCurveOffset(c.z, dist, track);
-                    child.position.set(c.x + curve, 0.5, c.z);
-                    child.rotation.z = c.tilt;
-                }
-            }
-        });
-
-        if (onPositionUpdate) {
-            onPositionUpdate(cars.map((c) => c.z));
-        }
-        if (onDetailedUpdate) {
-            onDetailedUpdate(cars.map((c) => ({ x: c.x, z: c.z, totalDist: c.totalDist })));
-        }
+        const curve = getCurveOffset(carState.z, dist, track);
+        g.position.set(carState.x + curve, BODY_Y, carState.z);
+        g.rotation.set(0, 0, carState.tilt);
     });
 
     return (
         <group ref={groupRef}>
-            {carsRef.current.map((car) => {
-                const pal = PALETTES[car.idx % PALETTES.length];
-                return (
-                    // We set initial position but let useFrame take over seamlessly
-                    <group key={car.idx} position={[car.x, 0.5, car.z]} rotation={[0, 0, car.tilt]}>
-                        <mesh geometry={bodyGeo} castShadow>
-                            <meshStandardMaterial color={pal.body} metalness={0.85} roughness={0.2} />
-                        </mesh>
-                        <mesh geometry={cabinGeo} position={[0, 0.38, 0.2]}>
-                            <meshStandardMaterial color={pal.body} metalness={0.7} roughness={0.3} transparent opacity={0.85} />
-                        </mesh>
-                        <mesh geometry={underGeo} position={[0, -0.26, 0]}>
-                            <meshStandardMaterial color={pal.accent} emissive={pal.glow} emissiveIntensity={3} toneMapped={false} />
-                        </mesh>
-                        <mesh geometry={sideGeo} position={[-0.92, 0, 0]}>
-                            <meshStandardMaterial color={pal.accent} emissive={pal.glow} emissiveIntensity={3} toneMapped={false} />
-                        </mesh>
-                        <mesh geometry={sideGeo} position={[0.92, 0, 0]}>
-                            <meshStandardMaterial color={pal.accent} emissive={pal.glow} emissiveIntensity={3} toneMapped={false} />
-                        </mesh>
-                        {[-0.55, 0.55].map((x, j) => (
-                            <mesh key={`h-${j}`} geometry={lightGeo} position={[x, 0.05, -1.77]}>
-                                <meshStandardMaterial color="#fff" emissive="#fff" emissiveIntensity={5} toneMapped={false} />
-                            </mesh>
-                        ))}
-                        {[-0.55, 0.55].map((x, j) => (
-                            <mesh key={`t-${j}`} geometry={tailGeo} position={[x, 0.05, 1.77]}>
-                                <meshStandardMaterial color="#ff0033" emissive="#ff0033" emissiveIntensity={4} toneMapped={false} />
-                            </mesh>
-                        ))}
-                        <pointLight position={[0, -0.3, 0]} color={pal.glow} intensity={2} distance={5} />
-                    </group>
-                );
-            })}
+            <primitive object={cloned} />
         </group>
     );
 }
 
-/** Export lap distance for use in other modules */
+// ── AI Opponents ──────────────────────────────────────────────────────
+export function AIOpponents({
+    playerSpeed,
+    aiSpeedMult = 1,
+    onPositionUpdate,
+    onDetailedUpdate,
+    playerDistRef,
+    track,
+    aiKnockbackRef,
+    randomFn,
+}: Props) {
+    // Load shared GLB ONCE here — not inside 4 child hooks
+    const { scene } = useGLTF(`/models/${SHARED_GLB}`);
+
+    // Create 4 tinted clones from the single loaded scene
+    const clones = useMemo(() => {
+        return AI_TINTS.map(tint => cloneWithTint(scene as unknown as THREE.Group, tint));
+    }, [scene]);
+
+    // AI state — initialised once with useMemo
+    const cars = useMemo<AICar[]>(() => {
+        const arr: AICar[] = [];
+        for (let i = 0; i < AI_COUNT; i++) {
+            const lane = i % LANE_COUNT;
+            const x = -ROAD_WIDTH / 2 + LANE_WIDTH / 2 + lane * LANE_WIDTH;
+            const baseSpeed = 26 + randomFn() * 8;
+            arr.push({
+                x, z: -(15 + i * 14), lane,
+                speed: baseSpeed,
+                maxSpeed: 30 + randomFn() * 15,
+                tilt: 0, idx: i,
+                totalDist: 15 + i * 14,
+                laneChangeCooldown: 2 + i * 1.5,
+                speedTarget: baseSpeed,
+                speedTargetCooldown: 0,
+            });
+        }
+        return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Physics update loop — mutates car state each frame
+    useFrame((_, dt) => {
+        const safeDt = Math.min(dt, 0.05);
+        const pSpeed = playerSpeed.current ?? 30;
+
+        cars.forEach((c, i) => {
+            c.speedTargetCooldown -= safeDt;
+            if (c.speedTargetCooldown <= 0) {
+                c.speedTarget = pSpeed * (0.92 + randomFn() * 0.12) * aiSpeedMult;
+                c.speedTargetCooldown = 0.35 + randomFn() * 0.25;
+            }
+
+            const relZ = c.z;
+            let target: number;
+            if      (relZ < -50) target = pSpeed * 0.70 * aiSpeedMult;
+            else if (relZ < -25) target = pSpeed * 0.85 * aiSpeedMult;
+            else if (relZ >  40) target = pSpeed * 1.40 * aiSpeedMult;
+            else if (relZ >  15) target = pSpeed * 1.20 * aiSpeedMult;
+            else                 target = c.speedTarget;
+
+            c.speed = THREE.MathUtils.lerp(c.speed, target, safeDt * 2);
+            c.totalDist += c.speed * safeDt;
+            c.z += (pSpeed - c.speed) * safeDt;
+
+            if (c.z >  70) c.z = -55;
+            if (c.z < -80) c.z =  45;
+
+            c.laneChangeCooldown -= safeDt;
+            if (c.laneChangeCooldown <= 0) {
+                c.lane = Math.floor(randomFn() * LANE_COUNT);
+                c.laneChangeCooldown = 3 + randomFn() * 4;
+            }
+
+            if (aiKnockbackRef?.current && aiKnockbackRef.current[i] !== undefined) {
+                const kb = THREE.MathUtils.clamp(aiKnockbackRef.current[i], -1.2, 1.2);
+                c.x = THREE.MathUtils.clamp(c.x + kb, AI_MIN_X, AI_MAX_X);
+                delete aiKnockbackRef.current[i];
+            }
+
+            const targetX = -ROAD_WIDTH / 2 + LANE_WIDTH / 2 + c.lane * LANE_WIDTH;
+            const dx = targetX - c.x;
+            const maxStep = AI_LATERAL_SPEED * safeDt;
+            const prevX = c.x;
+
+            if (Math.abs(dx) > maxStep) {
+                c.x += Math.sign(dx) * maxStep;
+            } else {
+                c.x = targetX;
+            }
+            c.x = THREE.MathUtils.clamp(c.x, AI_MIN_X, AI_MAX_X);
+
+            const actualDx = c.x - prevX;
+            const targetTilt = THREE.MathUtils.clamp(-actualDx / safeDt * 0.018, -0.08, 0.08);
+            c.tilt = THREE.MathUtils.lerp(c.tilt, targetTilt, safeDt * 6);
+        });
+
+        if (onPositionUpdate) onPositionUpdate(cars.map(c => c.z));
+        if (onDetailedUpdate) onDetailedUpdate(cars.map(c => ({ x: c.x, z: c.z, totalDist: c.totalDist })));
+    });
+
+    return (
+        <>
+            {cars.map((car, i) => (
+                <AISingleCar
+                    key={car.idx}
+                    carState={car}
+                    cloned={clones[i]}
+                    playerDistRef={playerDistRef}
+                    track={track}
+                />
+            ))}
+        </>
+    );
+}
+
 export { LAP_DISTANCE };

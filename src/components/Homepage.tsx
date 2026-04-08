@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import {
     Play, Zap, Trophy, Users, Ghost, Coins, Shield, ChevronRight,
-    Activity, Flame, Gauge, Sparkles
+    Activity, Flame, Gauge, Sparkles, Cpu, BarChart3, Globe, Target,
+    TrendingUp, Bot, Layers
 } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { insforge } from '../lib/insforge';
@@ -529,6 +530,170 @@ function TokenSection() {
     );
 }
 
+// ─── Roadmap Section ─────────────────────────────────────────────
+function Roadmap() {
+    const phases = [
+        {
+            phase: '01',
+            label: 'Live',
+            title: 'Core Racing',
+            color: 'cyan',
+            glow: 'rgba(0,255,255,0.2)',
+            border: 'border-cyan-500/30',
+            cardBg: 'from-cyan-500/[0.07] to-blue-500/[0.04]',
+            labelBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+            iconBg: 'bg-cyan-500/10',
+            iconColor: 'text-cyan-400',
+            lineColor: 'from-cyan-500/40 to-purple-500/20',
+            icon: Gauge,
+            items: [
+                { icon: Users, text: 'Multiplayer racing' },
+                { icon: Trophy, text: 'Ranked matches' },
+                { icon: Coins, text: 'On-chain payouts' },
+                { icon: Ghost, text: 'Ghost replay system' },
+            ],
+        },
+        {
+            phase: '02',
+            label: 'Coming Soon',
+            title: 'Competitive Expansion',
+            color: 'purple',
+            glow: 'rgba(168,85,247,0.2)',
+            border: 'border-purple-500/30',
+            cardBg: 'from-purple-500/[0.07] to-pink-500/[0.04]',
+            labelBg: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+            iconBg: 'bg-purple-500/10',
+            iconColor: 'text-purple-400',
+            lineColor: 'from-purple-500/40 to-pink-500/20',
+            icon: BarChart3,
+            items: [
+                { icon: TrendingUp, text: 'Ranking system (ELO)' },
+                { icon: Trophy, text: 'Tournaments' },
+                { icon: Activity, text: 'Seasonal leaderboard' },
+                { icon: Sparkles, text: 'NDRIFT integration' },
+            ],
+        },
+        {
+            phase: '03',
+            label: 'Planned',
+            title: 'AI & Prediction Layer',
+            color: 'pink',
+            glow: 'rgba(236,72,153,0.2)',
+            border: 'border-pink-500/30',
+            cardBg: 'from-pink-500/[0.07] to-orange-500/[0.04]',
+            labelBg: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+            iconBg: 'bg-pink-500/10',
+            iconColor: 'text-pink-400',
+            lineColor: 'from-pink-500/40 to-orange-500/20',
+            icon: Bot,
+            items: [
+                { icon: Target, text: 'Prediction markets' },
+                { icon: Bot, text: 'AI Analyst Agent for performance insights' },
+                { icon: Cpu, text: 'Strategy-based wagering' },
+            ],
+        },
+        {
+            phase: '04',
+            label: 'Vision',
+            title: 'Ecosystem Vision',
+            color: 'orange',
+            glow: 'rgba(251,146,60,0.2)',
+            border: 'border-orange-500/30',
+            cardBg: 'from-orange-500/[0.07] to-yellow-500/[0.04]',
+            labelBg: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+            iconBg: 'bg-orange-500/10',
+            iconColor: 'text-orange-400',
+            lineColor: 'from-orange-500/20 to-transparent',
+            icon: Globe,
+            items: [
+                { icon: Layers, text: 'Fully on-chain competitive infrastructure' },
+                { icon: Globe, text: 'Cross-game token utility' },
+            ],
+        },
+    ];
+
+    return (
+        <section className="py-28 px-4">
+            <div className="max-w-6xl mx-auto">
+                <FadeInSection className="text-center mb-20">
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-400/60 mb-3 block">Roadmap</span>
+                    <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+                        Built to{' '}
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
+                            Evolve
+                        </span>
+                    </h2>
+                    <p className="text-slate-400 max-w-xl mx-auto text-lg">
+                        From a racing game to a fully decentralized competitive ecosystem.
+                    </p>
+                </FadeInSection>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {phases.map((p, i) => (
+                        <FadeInSection key={p.phase} delay={i * 0.12}>
+                            <motion.div
+                                whileHover={{
+                                    y: -6,
+                                    boxShadow: `0 0 50px ${p.glow}`,
+                                }}
+                                transition={{ duration: 0.3 }}
+                                className={`relative p-7 rounded-2xl bg-gradient-to-br ${p.cardBg} border ${p.border} backdrop-blur-xl overflow-hidden group`}
+                            >
+                                {/* Phase number watermark */}
+                                <div className="absolute -right-4 -bottom-6 text-[120px] font-black text-white/[0.025] select-none leading-none">
+                                    {p.phase}
+                                </div>
+
+                                {/* Glow orb */}
+                                <motion.div
+                                    animate={{ opacity: [0.4, 0.7, 0.4] }}
+                                    transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                                    className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-[60px]"
+                                    style={{ background: p.glow }}
+                                />
+
+                                <div className="relative">
+                                    {/* Header row */}
+                                    <div className="flex items-start justify-between mb-5">
+                                        <div className={`w-12 h-12 rounded-xl ${p.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                            <p.icon className={`w-6 h-6 ${p.iconColor}`} />
+                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${p.labelBg}`}>
+                                            {p.label}
+                                        </span>
+                                    </div>
+
+                                    <div className="mb-1 text-xs font-mono text-slate-500 tracking-widest">PHASE {p.phase}</div>
+                                    <h3 className="text-xl font-bold text-white mb-5">{p.title}</h3>
+
+                                    {/* Items */}
+                                    <ul className="space-y-2.5">
+                                        {p.items.map((item, j) => (
+                                            <motion.li
+                                                key={item.text}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                whileInView={{ opacity: 1, x: 0 }}
+                                                viewport={{ once: true }}
+                                                transition={{ delay: i * 0.1 + j * 0.06 }}
+                                                className="flex items-center gap-3 text-sm text-slate-300"
+                                            >
+                                                <div className={`w-7 h-7 rounded-lg ${p.iconBg} flex items-center justify-center shrink-0`}>
+                                                    <item.icon className={`w-3.5 h-3.5 ${p.iconColor}`} />
+                                                </div>
+                                                {item.text}
+                                            </motion.li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </motion.div>
+                        </FadeInSection>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
 // ─── Final CTA ────────────────────────────────────────────────────
 function FinalCTA() {
     const navigate = useNavigate();
@@ -576,6 +741,7 @@ export const Homepage = () => {
             <LiveActivity />
             <Features />
             <TokenSection />
+            <Roadmap />
             <FinalCTA />
         </div>
     );

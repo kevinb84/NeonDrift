@@ -33,6 +33,9 @@ export function Road({ speed, accentColor = '#00ffff', envType = 'city', playerD
     const rightCurbRef = useRef<THREE.Mesh>(null);
 
     const dashGeo = useMemo(() => new THREE.PlaneGeometry(0.12, 3), []);
+    // Reuse across frames — never allocate inside useFrame
+    const dashDummy = useMemo(() => new THREE.Object3D(), []);
+    const lastDistRef = useRef(-999); // track last applied dist to skip no-op updates
 
     // Dash data (x, z base offset)
     const dashes = useMemo(() => {
@@ -104,22 +107,35 @@ export function Road({ speed, accentColor = '#00ffff', envType = 'city', playerD
     useFrame((_, dt) => {
         const dist = playerDistRef?.current || 0;
 
-        // Initialize once
-        [roadRef.current, leftEdgeRef.current, rightEdgeRef.current,
-        leftGlowRef.current, rightGlowRef.current,
-        leftCurbRef.current, rightCurbRef.current].forEach(initializeGeometry);
+        // Only re-apply curve when player has moved enough — avoids wasting
+        // 512 vertex CPU writes and GPU uploads on frames where camera is still
+        const distMoved = Math.abs(dist - lastDistRef.current);
+        const needsCurveUpdate = distMoved > 0.5;
+        if (needsCurveUpdate) {
+            lastDistRef.current = dist;
 
-        // Apply curvature
-        [roadRef.current, leftEdgeRef.current, rightEdgeRef.current,
-        leftGlowRef.current, rightGlowRef.current,
-        leftCurbRef.current, rightCurbRef.current].forEach(m => applyCurve(m, dist));
+            // Initialize once
+            [roadRef.current, leftEdgeRef.current, rightEdgeRef.current,
+            leftGlowRef.current, rightGlowRef.current,
+            leftCurbRef.current, rightCurbRef.current].forEach(initializeGeometry);
 
-        // Scroll dashes and apply curve
+            // Apply curvature
+            [roadRef.current, leftEdgeRef.current, rightEdgeRef.current,
+            leftGlowRef.current, rightGlowRef.current,
+            leftCurbRef.current, rightCurbRef.current].forEach(m => applyCurve(m, dist));
+
+            if (groundRef.current) {
+                initializeGeometry(groundRef.current);
+                applyCurve(groundRef.current, dist);
+            }
+        }
+
+        // Scroll dashes every frame (cheap — just matrix updates)
         scrollRef.current = (scrollRef.current + speed * dt) % 8;
         if (dashGroupRef.current) {
-            const dummy = new THREE.Object3D();
-            dummy.position.y = 0.02;
-            dummy.rotation.x = -Math.PI / 2;
+            // dashDummy is hoisted — no allocation here
+            dashDummy.position.y = 0.02;
+            dashDummy.rotation.x = -Math.PI / 2;
 
             dashes.forEach((d, i) => {
                 let currentZ = d.zOffset + scrollRef.current;
@@ -127,18 +143,12 @@ export function Road({ speed, accentColor = '#00ffff', envType = 'city', playerD
 
                 const curve = getCurveOffset(currentZ, dist, track);
 
-                dummy.position.x = d.x + curve;
-                dummy.position.z = currentZ;
-                dummy.updateMatrix();
-                dashGroupRef.current!.setMatrixAt(i, dummy.matrix);
+                dashDummy.position.x = d.x + curve;
+                dashDummy.position.z = currentZ;
+                dashDummy.updateMatrix();
+                dashGroupRef.current!.setMatrixAt(i, dashDummy.matrix);
             });
             dashGroupRef.current.instanceMatrix.needsUpdate = true;
-        }
-
-        // Apply simpler curve to ground to prevent road peeling off it
-        if (groundRef.current) {
-            initializeGeometry(groundRef.current);
-            applyCurve(groundRef.current, dist);
         }
     });
 
@@ -149,7 +159,22 @@ export function Road({ speed, accentColor = '#00ffff', envType = 'city', playerD
             {/* ── Road surface ── */}
             <mesh ref={roadRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
                 <planeGeometry args={[ROAD_WIDTH, ROAD_LENGTH, 1, SEGMENTS]} />
-                <meshStandardMaterial color="#1a1a28" roughness={0.85} metalness={0.05} />
+                <meshStandardMaterial color="#1a1a28" roughness={0.6} metalness={0.3} />
+            </mesh>
+
+            {/* ── Reflection layer (wet neon look) ── */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
+                <planeGeometry args={[ROAD_WIDTH, ROAD_LENGTH, 1, SEGMENTS]} />
+                <meshStandardMaterial
+                    color={accentColor}
+                    emissive={accentColor}
+                    emissiveIntensity={0.08}
+                    roughness={0.05}
+                    metalness={0.9}
+                    transparent
+                    opacity={0.12}
+                    toneMapped={false}
+                />
             </mesh>
 
             {/* ── Ground extending beyond road ── */}

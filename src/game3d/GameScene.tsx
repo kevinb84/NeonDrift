@@ -32,12 +32,17 @@ import type { RemotePlayerData } from './hooks/useMultiplayerSync';
 const BASE_SPEED = 30;
 const MAX_SPEED = 80;
 const NITRO_MAX_SPEED = 130;
-const ACCEL = 15;
 const DECEL = 25;
 const LAP_DISTANCE = 2000;
 const NITRO_DRAIN = 30;     // % per second while boosting
 const NITRO_CHARGE = 8;     // % per second while not boosting
 const NITRO_MIN_USE = 10;   // minimum tank % to activate
+
+/** Non-linear acceleration — fast initial pull, tapering near cap */
+function computeAccel(speed: number, cap: number): number {
+    const t = Math.max(0, 1 - speed / cap);    // 1 at 0 speed → 0 at cap
+    return 8 + 32 * (t * t);                   // 40 at start → 8 near cap
+}
 
 export interface GameSceneProps {
     car?: CarConfig;
@@ -70,11 +75,15 @@ function CameraRig({
     const { camera } = useThree();
     const target = useRef(new THREE.Vector3());
     const fovTarget = useRef(60);
+    const laggedX = useRef(0);
 
     useFrame((_, dt) => {
         const spd = speedRef.current ?? BASE_SPEED;
         const playerX = playerXRef.current ?? 0;
         const dist = playerDistRef.current ?? 0;
+
+        // Camera lag: follows playerX with slight delay for motion feel
+        laggedX.current = THREE.MathUtils.lerp(laggedX.current, playerX, dt * 3.5);
 
         // Decay camera shake
         if (cameraShakeRef.current > 0) {
@@ -82,35 +91,45 @@ function CameraRig({
         }
         const shake = cameraShakeRef.current;
 
-        // Current world X position of the car
-        const carXWorld = playerX + getCurveOffset(0, dist, track);
+        const carXWorld = laggedX.current + getCurveOffset(0, dist, track);
 
-        // Sample a point slightly ahead to find the "forward" tangent of the curve
+        // Tangent ahead for curve-following
         const lookAheadZ = -5;
         const lookAheadXWorld = playerX + getCurveOffset(lookAheadZ, dist, track);
-
         const forward = new THREE.Vector3(lookAheadXWorld - carXWorld, 0, lookAheadZ).normalize();
 
-        // Calculate camera target position: behind the car, aligned with the curve
-        const camDist = 10 + spd * 0.04;
-        const camHeight = 4 + spd * 0.02;
-
-        target.current.set(
-            carXWorld - forward.x * camDist + (randomFn() - 0.5) * shake * 2,
-            camHeight + (randomFn() - 0.5) * shake * 1.5,
-            -forward.z * camDist + (randomFn() - 0.5) * shake * 2
+        // Turn tilt: camera rolls slightly into turns
+        const turnDelta = playerX - laggedX.current;
+        (camera as THREE.PerspectiveCamera).rotation.z = THREE.MathUtils.lerp(
+            (camera as THREE.PerspectiveCamera).rotation.z,
+            -turnDelta * 0.012,
+            dt * 6
         );
 
-        camera.position.lerp(target.current, dt * (4 + shake * 5)); // Snap faster during shake
+        const camDist = 10 + spd * 0.045;
+        const camHeight = 3.8 + spd * 0.022;
 
-        // Determine look-at target smoothly ahead on the track
-        const focalZ = -20;
-        // Look slightly towards the center of the road rather than the exact lane for a smoother feel
-        const focalXWorld = (playerX * 0.6) + getCurveOffset(focalZ, dist, track);
-        camera.lookAt(focalXWorld, 0.5, focalZ);
+        // Only apply random shake offset when actively shaking (eliminates idle jitter)
+        const shakeX = shake > 0.05 ? (randomFn() - 0.5) * shake * 2 : 0;
+        const shakeY = shake > 0.05 ? (randomFn() - 0.5) * shake * 1.5 : 0;
+        const shakeZ = shake > 0.05 ? (randomFn() - 0.5) * shake * 2 : 0;
 
-        // FOV widens during nitro for speed rush feel
-        fovTarget.current = nitroActive.current ? 78 : 60;
+        target.current.set(
+            carXWorld - forward.x * camDist + shakeX,
+            camHeight + shakeY,
+            -forward.z * camDist + shakeZ
+        );
+
+        // Faster lerp during shake (snappy collision feedback)
+        camera.position.lerp(target.current, dt * (4.5 + shake * 6));
+
+        const focalZ = -22;
+        const focalXWorld = (playerX * 0.55) + getCurveOffset(focalZ, dist, track);
+        camera.lookAt(focalXWorld, 0.4, focalZ);
+
+        // FOV: base 62, nitro 82, adds slight compression at low speed
+        const speedFov = THREE.MathUtils.clamp(60 + (spd - BASE_SPEED) * 0.08, 60, 70);
+        fovTarget.current = nitroActive.current ? 82 : speedFov;
         const cam = camera as THREE.PerspectiveCamera;
         cam.fov = THREE.MathUtils.lerp(cam.fov, fovTarget.current, dt * 5);
         cam.updateProjectionMatrix();
@@ -137,6 +156,8 @@ function SceneContent({
     getRemoteState,
     getGhostState,
     hasGhost,
+    driftStateRef,
+    carModelFile = 'car-01.glb',
 }: {
     speedRef: React.MutableRefObject<number>;
     nitroRef: React.MutableRefObject<number>;
@@ -154,37 +175,46 @@ function SceneContent({
     getRemoteState: () => RemotePlayerData | null;
     getGhostState?: () => GhostState | null;
     hasGhost: boolean;
+    driftStateRef: React.MutableRefObject<{ drifting: boolean; grip: number; exitBoost: number }>;
+    carModelFile?: string;
 }) {
     const controls = useGameControls();
     const playerXRef = useRef(0);
     const aiPosRef = useRef<{ x: number; z: number; totalDist: number }[]>([]);
 
+    const firstFrame = useRef(true);
+
     useFrame((_, dt) => {
         const ctrl = controls.current;
         if (!ctrl) return;
+
+        // First frame after mount can have a huge dt (asset loading time baked in).
+        // Cap it hard to prevent instant lap completion / speed spike.
+        const safeDt = firstFrame.current ? Math.min(dt, 0.02) : Math.min(dt, 0.05);
+        firstFrame.current = false;
 
         // Nitro logic
         const wantsNitro = ctrl.nitro && ctrl.up && nitroRef.current > NITRO_MIN_USE;
         nitroActiveRef.current = wantsNitro && nitroRef.current > 0;
 
         if (nitroActiveRef.current) {
-            nitroRef.current = Math.max(0, nitroRef.current - NITRO_DRAIN * dt);
+            nitroRef.current = Math.max(0, nitroRef.current - NITRO_DRAIN * safeDt);
         } else {
-            nitroRef.current = Math.min(100, nitroRef.current + NITRO_CHARGE * dt);
+            nitroRef.current = Math.min(100, nitroRef.current + NITRO_CHARGE * safeDt);
         }
 
         const cap = nitroActiveRef.current ? NITRO_MAX_SPEED : MAX_SPEED;
-        const accel = nitroActiveRef.current ? ACCEL * 2.5 : ACCEL;
 
         if (ctrl.up) {
-            speedRef.current = Math.min(speedRef.current + accel * dt, cap);
+            const accel = computeAccel(speedRef.current, cap);
+            speedRef.current = Math.min(speedRef.current + accel * safeDt, cap);
         } else if (ctrl.down) {
-            speedRef.current = Math.max(speedRef.current - DECEL * dt, BASE_SPEED * 0.3);
+            speedRef.current = Math.max(speedRef.current - DECEL * safeDt, BASE_SPEED * 0.3);
         } else {
-            speedRef.current = THREE.MathUtils.lerp(speedRef.current, BASE_SPEED, dt * 0.5);
+            speedRef.current = THREE.MathUtils.lerp(speedRef.current, BASE_SPEED, safeDt * 0.6);
         }
 
-        onFrame(speedRef.current, playerXRef.current, aiPosRef.current, dt);
+        onFrame(speedRef.current, playerXRef.current, aiPosRef.current, safeDt);
     });
 
     const handleAIUpdate = useCallback((_positions: number[]) => {
@@ -204,10 +234,9 @@ function SceneContent({
             <ambientLight intensity={lAmb[1] as number} color={lAmb[0] as string} />
             <directionalLight position={[lDir1[0] as number, lDir1[1] as number, lDir1[2] as number]} intensity={lDir1[3] as number} color={lDir1[4] as string} />
             <directionalLight position={[lDir2[0] as number, lDir2[1] as number, lDir2[2] as number]} intensity={lDir2[3] as number} color={lDir2[4] as string} />
-            <pointLight position={[-20, 15, -10]} intensity={3} color="#ff00ff" distance={100} />
-            <pointLight position={[20, 15, -10]} intensity={3} color="#00ffff" distance={100} />
-            <pointLight position={[0, 25, -50]} intensity={2} color="#8833ff" distance={120} />
-            <pointLight position={[0, 10, 15]} intensity={2} color="#4444aa" distance={60} />
+            {/* Neon color fill — directional is flat cost vs point light's per-vertex distance calc */}
+            <directionalLight position={[-15, 20, -15]} intensity={1.2} color="#cc00ff" />
+            <directionalLight position={[15, 20, -15]} intensity={1.0} color="#00ccff" />
 
             <fog attach="fog" args={[track?.fogColor || '#150e2a', 50, 280]} />
             <color attach="background" args={[track?.bgColor || '#150e2a']} />
@@ -215,7 +244,7 @@ function SceneContent({
             <CameraRig speedRef={speedRef} nitroActive={nitroActiveRef} playerXRef={playerXRef} playerDistRef={playerDistRef} track={track} cameraShakeRef={cameraShakeRef} randomFn={randomFn} />
 
             <Road speed={speedRef.current} accentColor={track?.accentColor} envType={track?.envType} playerDistRef={playerDistRef} track={track} />
-            <Car controls={controls} speed={speedRef} onPositionChange={(x: number) => { playerXRef.current = x; }} playerDistRef={playerDistRef} track={track} knockbackRef={playerKnockbackRef} />
+            <Car controls={controls} speed={speedRef} onPositionChange={(x: number) => { playerXRef.current = x; }} playerDistRef={playerDistRef} track={track} knockbackRef={playerKnockbackRef} driftStateRef={driftStateRef} modelFile={carModelFile} />
 
             {/* AI Opponents — only in practice mode */}
             {!isRanked && (
@@ -253,12 +282,12 @@ function SceneContent({
             {track?.envType === 'desert' && <Desert speed={speedRef.current} playerDistRef={playerDistRef} track={track} />}
             {track?.envType === 'tunnel' && <Tunnel speed={speedRef.current} playerDistRef={playerDistRef} track={track} />}
             {track?.envType !== 'desert' && (
-                <Particles speed={speedRef.current} playerDistRef={playerDistRef} track={track} />
+                <Particles speed={speedRef.current} playerDistRef={playerDistRef} track={track} driftStateRef={driftStateRef} playerXRef={playerXRef} />
             )}
             <FinishLine playerDist={playerDistRef} lapDistance={LAP_DISTANCE} />
 
             <EffectComposer>
-                <Bloom luminanceThreshold={0.25} luminanceSmoothing={0.85} intensity={bloomIntensity} mipmapBlur />
+                <Bloom luminanceThreshold={0.18} luminanceSmoothing={0.9} intensity={bloomIntensity} mipmapBlur />
             </EffectComposer>
         </>
     );
@@ -282,6 +311,8 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
     const cameraShakeRef = useRef(0);
     const playerKnockbackRef = useRef(0);
     const aiKnockbackRef = useRef<{ [idx: number]: number }>({});
+    const driftStateRef = useRef<{ drifting: boolean; grip: number; exitBoost: number }>({ drifting: false, grip: 1, exitBoost: 0 });
+    const driftHudRef = useRef<HTMLDivElement>(null);
 
     // Seeded random for determinism
     const randomFn = useMemo(() => createSeededRandom(matchConfig?.seed || Math.random()), [matchConfig?.seed]);
@@ -409,6 +440,20 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
         }
         if (nitroGlowRef.current) {
             nitroGlowRef.current.style.opacity = nitroActiveRef.current ? '0.3' : '0';
+        }
+
+        // Drift HUD
+        const driftState = driftStateRef.current;
+        if (driftHudRef.current) {
+            if (driftState.drifting) {
+                driftHudRef.current.style.opacity = '1';
+                driftHudRef.current.style.color = `hsl(${280 + (1 - driftState.grip) * 60}, 100%, 70%)`;
+            } else if (driftState.exitBoost > 0) {
+                driftHudRef.current.style.opacity = '1';
+                driftHudRef.current.style.color = '#ffdd00';
+            } else {
+                driftHudRef.current.style.opacity = '0';
+            }
         }
 
         // Only allow movement during racing
@@ -549,6 +594,8 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
                     getRemoteState={getInterpolatedState}
                     getGhostState={hasGhost ? () => ghostPlayback.getGhostState(raceState.state.current.raceTime) : undefined}
                     hasGhost={hasGhost}
+                    driftStateRef={driftStateRef}
+                    carModelFile={car?.modelFile ?? 'car-01.glb'}
                 />
             </Canvas>
 
@@ -637,6 +684,17 @@ export function GameScene({ car, track, difficulty, matchConfig, walletAddr, gho
                         borderRadius: 2, transition: 'width 0.1s',
                         boxShadow: '0 0 8px #00ccff88',
                     }} />
+                </div>
+
+                {/* Drift indicator */}
+                <div ref={driftHudRef} style={{
+                    fontFamily: FONT, fontSize: 13, fontWeight: 900,
+                    letterSpacing: 4, marginTop: 10,
+                    textTransform: 'uppercase', opacity: 0,
+                    transition: 'opacity 0.15s, color 0.1s',
+                    textShadow: '0 0 12px currentColor',
+                }}>
+                    ⚡ DRIFT
                 </div>
             </div>
 

@@ -29,7 +29,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             
             const { error } = await insforge.storage
                 .from('assets')
-                .upload('app-logo', file, { upsert: true });
+                .upload('app-logo', file);
 
             if (error) throw error;
             
